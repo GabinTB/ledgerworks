@@ -27,7 +27,10 @@ is built on.
 Requirements: Python >= 3.11, [uv](https://docs.astral.sh/uv/), about 2.7 GB of
 disk (measured on macOS, Apple silicon: 1.2 GB for `.venv`, 1.5 GB for the model
 in the Hugging Face cache), a network connection the first time (to
-download the model from the Hugging Face Hub). CPU is enough.
+download the model from the Hugging Face Hub). CPU is enough. On Linux, `uv.lock`
+takes torch from the PyTorch CPU index (`2.14.1+cpu`), not PyPI, whose Linux
+wheel pulls several GB of CUDA libraries a CPU run never loads; macOS and
+Windows use PyPI's torch, which is CPU-only there.
 
 ```bash
 git clone https://github.com/GabinTB/ledgerworks
@@ -36,10 +39,10 @@ uv sync --extra model          # creates .venv from uv.lock (pinned)
 uv run codecheck-fomc all      # ingest, embed, score, verify, compare
 ```
 
-The corpus is 46 statements from 2021-01-27 to 2026-09-16, split into 237
+The corpus is 46 statements from 2021-01-27 to 2026-09-16, split into 190
 paragraphs. Measured runtime on an Apple M4 Pro (CPU), model already cached:
 about 15 seconds wall clock, almost all of it in the embedding step (a
-395M-parameter model over 237 paragraphs). The first run also downloads the
+395M-parameter model over 190 paragraphs). The first run also downloads the
 model weights (1.6 GB). The last lines of the output are the comparison with
 `expected/` and a verdict (here, on the machine that produced `expected/`):
 
@@ -126,7 +129,20 @@ with a `meta.json` record), each partitioned one file per year:
 | 3 score | `fomc_narrative_scores` | step 2 + taxonomy | one row per statement × narrative: `cos_doc`, `cos_para_mean`, `cos_para_max`; plus `narratives.parquet` (the narrative vectors) |
 
 Paragraphs are the embedding unit because FOMC statements are written as short
-self-contained paragraphs and the model was trained at 512 tokens. A narrative
+self-contained paragraphs and the model was trained at 512 tokens. The parser
+(`codecheck_fomc/corpus.py`, `PARSER_VERSION = "3"`, recorded in the
+`fomc_statements` hyperparameters) keeps only what the Committee says. From the
+`<p>` elements of the press release it drops:
+
+- page furniture ("For release at", "Share", "Implementation Note", "Last Update", ...);
+- the release-date line printed above the title ("January 27, 2021");
+- sidebar panels (`<div class="panel ...">`, "Related Information" links);
+- vote paragraphs, in both formats: "Voting for/against the monetary policy
+  action ..." (with any dissents inside it), the approval line that opens
+  statements from June 2026 ("The Federal Open Market Committee approved the
+  following statement for release by a 12 – 0 vote:"), and standalone dissent
+  paragraphs ("<Name>, who preferred ...", "<Name> dissented").
+ A narrative
 vector is the mean of the embeddings of its description and seed phrases, from
 the same model. `cos_doc` compares the narrative with the mean of a statement's
 paragraph vectors; `cos_para_mean` and `cos_para_max` aggregate paragraph-level
@@ -134,8 +150,9 @@ cosines. These are raw scores; calibration is downstream work and out of scope.
 
 Every artifact records: its hyperparameters (which define its id), its input
 artifact (lineage), the model card (id, revision, dimension, pooling, library
-versions, device), the git commit of the code, start and end times, and the
-blake2b digest of every output file. `ledgerworks verify --root ledger` re-hashes
+versions, device), the git commit of the code, start and end times, the
+execution environment (Python, platform, `uv.lock` digest, versions of the
+direct dependencies), and the blake2b digest of every output file. `ledgerworks verify --root ledger` re-hashes
 everything and checks the lineage; `ledgerworks lineage ID` prints the graph.
 
 ## How the comparison works
@@ -155,6 +172,34 @@ counts reorder floating-point sums), hence the tolerances. The ingest step and
 the hashing test backend are exact, and `compare` reports how many files are
 hash-identical to the reference. The comparison exits non-zero on any failure;
 with no reference in `expected/` yet (first run) it says so and exits 0.
+
+## Cross-machine check
+
+`expected/` was produced on an Apple M4 Pro (macOS, arm64, CPython 3.14.5, PyPI
+torch 2.14.1). The manual workflow
+[`reproduce.yml`](../../.github/workflows/reproduce.yml) rebuilds everything on
+GitHub-hosted runners with `uv sync --extra model` and `codecheck-fomc all`, and
+uploads every `meta.json` and the comparison output. Run of 14 October 2026 at
+commit `556285d`:
+
+| | Linux (ubuntu-latest) | Windows (windows-latest) |
+|---|---|---|
+| Machine | x86_64, CPython 3.14.8, torch 2.14.1+cpu | AMD64, CPython 3.14.7, torch 2.14.1 |
+| Verdict | REPRODUCED | REPRODUCED |
+| statements | 46 identical, 6/6 files hash-identical | 46 identical, 6/6 files hash-identical |
+| embeddings, max\|diff\| | 6.97e-06 | 5.95e-06 |
+| embeddings, min cosine | 1.000000 | 1.000000 |
+| scores, max\|diff\| | 5.01e-06 | 4.11e-06 |
+| narrative vectors, max\|diff\| / min cosine | 3.73e-07 / 1.000000 | 3.58e-07 / 1.000000 |
+| Wall time, `all` (model download included) | 147 s | 148 s |
+
+The largest difference is about 14 times below the tolerance (`atol 1e-4`), and
+no file of the embedding or score tables is bit-identical across machines, as
+expected from different CPUs and BLAS kernels. On Windows the artifact ids of
+`fomc_statements` and `fomc_narrative_scores`, and the recorded `uv.lock`
+digest, differ from the reference: Git for Windows checks out `MANIFEST.json`,
+the taxonomy and `uv.lock` with CRLF line endings, which changes their sha256.
+The data they describe, and every compared value, are the same.
 
 ## Reproducing the reference run (author's procedure)
 
