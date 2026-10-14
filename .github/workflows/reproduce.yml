@@ -22,8 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
         with:
-          enable-cache: true
-          python-version: "3.14" # the reference run's interpreter (expected/*/meta.json env)
+          enable-cache: true # Python: examples/codecheck/.python-version
       - name: Model cache location
         run: echo "HF_HOME=$RUNNER_TEMP/hf" >> "$GITHUB_ENV"
       - uses: actions/cache@v4
