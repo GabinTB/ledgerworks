@@ -44,6 +44,14 @@ package = true
 
 [tool.uv.sources]
 ledgerworks = { path = "../..", editable = true }
+# Linux: CPU-only torch wheels. PyPI's Linux torch pulls the CUDA libraries (several GB)
+# that a CPU run never loads. macOS and Windows PyPI wheels are already CPU builds.
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [dependency-groups]
 dev = ["pytest>=8.0", "ruff>=0.9"]
