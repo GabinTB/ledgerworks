@@ -1,0 +1,55 @@
+name: Reproduce
+
+# Cross-machine check of the CodeCheck package: rebuild every artifact with the real
+# model on other operating systems and compare it with the committed expected/.
+# Manual only: it downloads the model (1.6 GB) and the CPU torch stack.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reproduce:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+        working-directory: examples/codecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: "3.14" # the reference run's interpreter (expected/*/meta.json env)
+      - name: Model cache location
+        run: echo "HF_HOME=$RUNNER_TEMP/hf" >> "$GITHUB_ENV"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/hf
+          key: hf-${{ runner.os }}-FinModernBERT-embed-large-v1-4fd33d2335e7
+      - run: uv sync --extra model
+      - name: codecheck-fomc all
+        run: |
+          start=$(date +%s)
+          status=0
+          # outputs go outside the work tree: an untracked file would make the jobs refuse
+          uv run codecheck-fomc all 2>&1 | tee "$RUNNER_TEMP/compare.txt" || status=$?
+          echo "wall_seconds $(( $(date +%s) - start ))" | tee -a "$RUNNER_TEMP/compare.txt"
+          exit $status
+      - name: Collect meta.json files and the compare output
+        if: always()
+        run: |
+          out="$RUNNER_TEMP/reproduce-out"
+          mkdir -p "$out"
+          cp "$RUNNER_TEMP/compare.txt" "$out/" || true
+          find ledger -name meta.json | while read -r f; do
+            mkdir -p "$out/$(dirname "$f")" && cp "$f" "$out/$f"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reproduce-${{ matrix.os }}
+          path: ${{ runner.temp }}/reproduce-out
