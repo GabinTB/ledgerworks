@@ -38,7 +38,7 @@ uv run codecheck-fomc all      # ingest, embed, score, verify, compare
 
 The corpus is 46 statements from 2021-01-27 to 2026-09-16, split into 237
 paragraphs. Measured runtime on an Apple M4 Pro (CPU), model already cached:
-about 20 seconds wall clock, almost all of it in the embedding step (a
+about 15 seconds wall clock, almost all of it in the embedding step (a
 395M-parameter model over 237 paragraphs). The first run also downloads the
 model weights (1.6 GB). The last lines of the output are the comparison with
 `expected/` and a verdict (here, on the machine that produced `expected/`):
