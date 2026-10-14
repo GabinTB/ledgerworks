@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,9 @@ PAGE = """<!DOCTYPE html><html><head><title>Federal Reserve Board - FOMC stateme
 <div id="content">
 <div class="row"><p>Skip to main content</p></div>
 <div id="article">
+  <div class="heading col-xs-12 col-sm-8 col-md-8">
+    <p class="article__time">{long_date}</p>
+  </div>
   <div class="row">
     <div class="col-xs-12 col-sm-8 col-md-8">
       <h3 class="title">Federal Reserve issues FOMC statement</h3>
@@ -21,6 +25,15 @@ PAGE = """<!DOCTYPE html><html><head><title>Federal Reserve Board - FOMC stateme
 {paragraphs}
       <p><a href="/newsevents/pressreleases/monetary{stamp}a1.htm">Implementation Note
       issued {pretty}</a></p>
+    </div>
+    <div class="col-xs-12 col-sm-4 col-md-4">
+      <div class="panel panel-related">
+        <div class="panel-heading"><h5 class="panel-title">Related Information</h5></div>
+        <div class="panel-body">
+          <p><a href="/newsevents/pressreleases/monetary{stamp}b.htm">Plans for Reducing
+          the Size of the Federal Reserve's Balance Sheet</a></p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -80,6 +93,10 @@ STATEMENTS: dict[str, list[str]] = {
 }
 
 
+def _long_date(stamp: str) -> str:
+    return date(int(stamp[:4]), int(stamp[4:6]), int(stamp[6:])).strftime("%B %d, %Y")
+
+
 def _pretty(stamp: str) -> str:
     return f"{stamp[:4]}-{stamp[4:6]}-{stamp[6:]}"
 
@@ -95,6 +112,7 @@ def write_raw_corpus(raw_dir: Path, statements: dict[str, list[str]] = STATEMENT
             paragraphs="\n".join(f"      <p>{p}</p>" for p in paragraphs),
             stamp=stamp,
             pretty=_pretty(stamp),
+            long_date=_long_date(stamp),
         ).encode()
         (html_dir / name).write_bytes(body)
         files[name] = {

@@ -25,7 +25,7 @@ from ledgerworks.verify import Finding, Severity
 
 from codecheck_fomc import DATA_RAW, PIPELINE, PIPELINE_REPO, PIPELINE_VERSION
 
-PARSER_VERSION = "1"
+PARSER_VERSION = "2"
 
 # Paragraphs that are page furniture, not statement text.
 _BOILERPLATE = re.compile(
@@ -33,16 +33,22 @@ _BOILERPLATE = re.compile(
     r"|For media inquiries|Board of Governors of the Federal Reserve System|Back to Top)",
     re.IGNORECASE,
 )
+# The release date printed above the title ("January 27, 2021"), not statement text.
+_DATE_ONLY = re.compile(
+    r"^(January|February|March|April|May|June|July|August|September|October|November|December)"
+    r" \d{1,2}, \d{4}$"
+)
 _WS = re.compile(r"\s+")
 
 
 class _Article(HTMLParser):
-    """Collect every <p> as (inside the article div?, text)."""
+    """Collect every <p> outside sidebar panels as (inside the article div?, text)."""
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.paragraphs: list[tuple[bool, str]] = []
         self._depth = 0  # div nesting inside <div id="article">
+        self._panel = 0  # div nesting inside a <div class="panel ..."> (related links sidebar)
         self._in_p = False
         self._buf: list[str] = []
 
@@ -57,18 +63,25 @@ class _Article(HTMLParser):
                 self._depth += 1
             elif a.get("id") == "article":
                 self._depth = 1
+            if self._panel:
+                self._panel += 1
+            elif "panel" in (a.get("class") or "").split():
+                self._panel = 1
         elif tag == "p":
             self._in_p, self._buf = True, []
         elif tag == "br" and self._in_p:
             self._buf.append(" ")
 
     def handle_endtag(self, tag: str) -> None:
-        if tag == "div" and self._in_article:
-            self._depth -= 1
+        if tag == "div":
+            if self._in_article:
+                self._depth -= 1
+            if self._panel:
+                self._panel -= 1
         elif tag == "p" and self._in_p:
             self._in_p = False
             text = _WS.sub(" ", "".join(self._buf)).strip()
-            if text:
+            if text and not self._panel:
                 self.paragraphs.append((self._in_article, text))
 
     def handle_data(self, data: str) -> None:
@@ -81,12 +94,14 @@ def parse_statement(html: str) -> list[str]:
 
     Paragraphs inside ``<div id="article">`` when the page has one (every
     federalreserve.gov press release does), else every paragraph on the page.
+    Dropped: page furniture, the release-date line and sidebar panels such as
+    "Related Information".
     """
     parser = _Article()
     parser.feed(html)
     inside = [t for in_article, t in parser.paragraphs if in_article]
     paragraphs = inside or [t for _, t in parser.paragraphs]
-    return [p for p in paragraphs if not _BOILERPLATE.match(p)]
+    return [p for p in paragraphs if not (_BOILERPLATE.match(p) or _DATE_ONLY.match(p))]
 
 
 @dataclass(frozen=True)

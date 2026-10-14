@@ -40,6 +40,22 @@ class TestParsing:
         paragraphs = parse_statement(html)
         assert paragraphs == STATEMENTS["20230322"]
 
+    def test_release_date_line_is_dropped(self, raw_dir):
+        html = (raw_dir / "html" / "monetary20230322a.htm").read_text()
+        assert '<p class="article__time">March 22, 2023</p>' in html
+        assert "March 22, 2023" not in parse_statement(html)
+
+    def test_only_date_only_paragraphs_are_dropped(self):
+        html = "<p>May 04, 2022</p><p>The Committee met on May 04, 2022.</p>"
+        assert parse_statement(html) == ["The Committee met on May 04, 2022."]
+
+    def test_related_information_panel_is_dropped(self, raw_dir):
+        html = (raw_dir / "html" / "monetary20230322a.htm").read_text()
+        assert "Related Information" in html
+        paragraphs = parse_statement(html)
+        assert not any("Plans for Reducing" in p for p in paragraphs)
+        assert paragraphs[-1].startswith("Voting for the monetary policy action")
+
     def test_page_without_article_div_falls_back_to_all_paragraphs(self):
         assert parse_statement("<html><body><p>one</p><p>Share</p><p>two</p></body></html>") == [
             "one",
