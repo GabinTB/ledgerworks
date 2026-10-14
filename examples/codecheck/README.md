@@ -24,8 +24,9 @@ is built on.
 
 ## Quick start
 
-Requirements: Python >= 3.11, [uv](https://docs.astral.sh/uv/), ~2 GB of disk
-for the model and its dependencies, a network connection the first time (to
+Requirements: Python >= 3.11, [uv](https://docs.astral.sh/uv/), about 2.7 GB of
+disk (measured on macOS, Apple silicon: 1.2 GB for `.venv`, 1.5 GB for the model
+in the Hugging Face cache), a network connection the first time (to
 download the model from the Hugging Face Hub). CPU is enough.
 
 ```bash
@@ -35,10 +36,10 @@ uv sync --extra model          # creates .venv from uv.lock (pinned)
 uv run codecheck-fomc all      # ingest, embed, score, verify, compare
 ```
 
-The corpus is 47 statements from 2021-01-27 to 2026-09-16, split into 289
+The corpus is 46 statements from 2021-01-27 to 2026-09-16, split into 237
 paragraphs. Measured runtime on an Apple M4 Pro (CPU), model already cached:
 about 20 seconds wall clock, almost all of it in the embedding step (a
-395M-parameter model over 289 paragraphs). The first run also downloads the
+395M-parameter model over 237 paragraphs). The first run also downloads the
 model weights (1.6 GB). The last lines of the output are the comparison with
 `expected/` and a verdict (here, on the machine that produced `expected/`):
 
@@ -53,7 +54,7 @@ fomc_narrative_scores: ...
 REPRODUCED
 ```
 
-The score tables hold 470 rows in total (47 statements × 10 narratives).
+The score tables hold 460 rows in total (46 statements × 10 narratives).
 
 `uv run codecheck-fomc --help` lists the individual steps. Everything lands in
 `./ledger/` (deleted and rebuilt freely; it is in `.gitignore`).
@@ -82,7 +83,8 @@ uv run pytest                                   # offline tests on a fixture cor
 ### Data
 
 FOMC statements from January 2021 to the retrieval date, one HTML page per
-meeting, downloaded from the Board's
+meeting statement (other FOMC press releases, such as the August 2025 update of
+the Statement on Longer-Run Goals and Monetary Policy Strategy, are excluded), downloaded from the Board's
 [FOMC calendars page](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm).
 Content on the Board's website is in the public domain and may be copied and
 distributed without permission
