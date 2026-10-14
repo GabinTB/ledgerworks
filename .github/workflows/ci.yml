@@ -35,9 +35,9 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
-      - run: uv venv --python 3.12 && uv pip install --no-deps .
+      - run: uv venv --clear --python 3.12 && uv pip install --python .venv --no-deps .
       - run: |
-          uv run --no-sync python -c "
+          .venv/bin/python -c "
           import ledgerworks, ledgerworks.jobs, ledgerworks.periods, ledgerworks.layout, ledgerworks.lineage
           print('core imports without numpy/pandas/polars:', ledgerworks.__version__)"
 

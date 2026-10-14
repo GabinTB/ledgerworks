@@ -58,7 +58,7 @@ jobs:
       - name: Install from TestPyPI and import
         run: |
           ver="${GITHUB_REF_NAME#v}"
-          uv venv --python 3.12
+          uv venv --clear --python 3.12
           # dependencies (none for the core) still resolve from PyPI; only ledgerworks comes from TestPyPI
           for i in 1 2 3 4 5 6; do
             uv pip install --index-url https://test.pypi.org/simple/ \
