@@ -7,6 +7,7 @@ verification of corrupted or incomplete artifacts.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -604,6 +605,60 @@ class TestSidecars:
             kind="k", pipeline=PIPELINE, pipeline_version=VERSION, sources=["upstream-artifact-id"]
         )
         assert "upstream-artifact-id" in render_readme(meta)
+
+
+# ---------------------------------------------------------------------------
+# Execution environment
+# ---------------------------------------------------------------------------
+
+
+class TestEnvironment:
+    def test_run_records_interpreter_platform_and_lock(self, index, tmp_path):
+        import platform
+
+        project = tmp_path / "project"
+        (project / "src").mkdir(parents=True)
+        (project / "uv.lock").write_text("version = 1\n")
+        (project / "pyproject.toml").write_text(
+            '[project]\nname = "p"\ndependencies = ["pytest>=8", "not-installed-pkg==1.0"]\n'
+            '[project.optional-dependencies]\nx = ["ledgerworks[cli]"]\n'
+        )
+        art = _run_producing(index, "k", repo_dir=project / "src")
+        env = art.meta.runs[-1].env
+        assert env["python"] == platform.python_version()
+        assert env["implementation"] == platform.python_implementation()
+        assert env["machine"] == platform.machine()
+        assert env["platform"] == platform.platform()
+        expected = hashlib.sha256(b"version = 1\n").hexdigest()
+        assert env["uv_lock_sha256"] == expected  # found walking up from repo_dir
+        assert env["dependencies"]["pytest"] == pytest.__version__
+        assert "ledgerworks" in env["dependencies"]
+        assert "not-installed-pkg" not in env["dependencies"]
+        # persisted in meta.json and shown in the README sidecar
+        meta, _ = read_meta(art.path)
+        assert meta.runs[-1].env == env
+        readme = (art.path / README_FILENAME).read_text()
+        assert "## Environment" in readme and expected[:12] in readme
+
+    def test_no_lock_records_none(self, tmp_path, monkeypatch):
+        from ledgerworks import meta as meta_module
+
+        monkeypatch.setattr(meta_module, "_nearest", lambda start, name: None)
+        env = meta_module.run_environment(tmp_path)
+        assert env["uv_lock_sha256"] is None
+        assert "dependencies" not in env
+
+    def test_old_meta_without_env_still_reads(self, index):
+        art = _run_producing(index, "k")
+        path = art.path / META_FILENAME
+        data = json.loads(path.read_text())
+        for run in data["runs"]:
+            del run["env"]
+            run["field_from_the_future"] = 1
+        path.write_text(json.dumps(data))
+        meta, _ = read_meta(art.path)
+        assert meta.runs[-1].env == {}
+        assert "## Environment" not in render_readme(meta)
 
 
 # ---------------------------------------------------------------------------

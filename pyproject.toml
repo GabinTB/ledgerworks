@@ -1,6 +1,6 @@
 [project]
 name = "ledgerworks"
-version = "0.1.0"
+version = "0.2.0"
 description = "Run, record, verify and trace pipeline artifacts: immutable outputs with provenance sidecars, lineage and a rebuildable index"
 readme = "README.md"
 license = {text = "MIT"}

@@ -17,7 +17,11 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import platform
+import re
 import subprocess
+import tomllib
+from importlib import metadata
 from pathlib import Path
 from typing import Any
 
@@ -113,6 +117,63 @@ def git_commit(repo_dir: Path | None = None) -> str | None:
         dirty = ""
 
     return f"{sha}-dirty" if dirty else sha
+
+
+# ---------------------------------------------------------------------------
+# Execution environment
+# ---------------------------------------------------------------------------
+
+_REQUIREMENT_NAME = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)")
+
+
+def run_environment(repo_dir: Path | None = None) -> dict[str, Any]:
+    """Interpreter, platform and dependency pins of the current process.
+
+    ``uv_lock_sha256`` is the sha256 of the nearest ``uv.lock`` found walking up
+    from `repo_dir` (default cwd), or None.  ``dependencies`` maps each direct
+    dependency declared in the ``pyproject.toml`` beside that lock (base and
+    optional) to its installed version; dependencies that are not installed
+    are left out, and so is the key when there is no lock or nothing is found.
+    """
+    lock = _nearest(Path(repo_dir or Path.cwd()).resolve(), "uv.lock")
+    env: dict[str, Any] = {
+        "python": platform.python_version(),
+        "implementation": platform.python_implementation(),
+        "platform": platform.platform(),
+        "machine": platform.machine(),
+        "uv_lock_sha256": hashlib.sha256(lock.read_bytes()).hexdigest() if lock else None,
+    }
+    deps = _direct_dependency_versions(lock.parent / "pyproject.toml") if lock else {}
+    if deps:
+        env["dependencies"] = deps
+    return env
+
+
+def _nearest(start: Path, name: str) -> Path | None:
+    for directory in (start, *start.parents):
+        if (directory / name).is_file():
+            return directory / name
+    return None
+
+
+def _direct_dependency_versions(pyproject: Path) -> dict[str, str]:
+    try:
+        project = tomllib.loads(pyproject.read_text()).get("project", {})
+    except (OSError, tomllib.TOMLDecodeError):
+        return {}
+    requirements = list(project.get("dependencies", []))
+    for extra in project.get("optional-dependencies", {}).values():
+        requirements.extend(extra)
+    versions: dict[str, str] = {}
+    for requirement in requirements:
+        match = _REQUIREMENT_NAME.match(requirement)
+        if not match:
+            continue
+        try:
+            versions[match.group(1)] = metadata.version(match.group(1))
+        except metadata.PackageNotFoundError:
+            continue
+    return dict(sorted(versions.items()))
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +280,24 @@ def render_readme(
             lines.append(
                 f"| {i} | {r.run_start} | {r.run_end or '(unfinished)'} | "
                 f"`{commit}` | {r.pipeline_version} | {len(r.produced)} | {state} |"
+            )
+        lines.append("")
+
+    if any(r.env for r in meta.runs):
+        lines += ["## Environment", ""]
+        lines += [
+            "| # | Python | Platform | Machine | uv.lock (sha256) | Dependencies |",
+            "| --: | --- | --- | --- | --- | --- |",
+        ]
+        for i, r in enumerate(meta.runs, 1):
+            if not r.env:
+                continue
+            e = r.env
+            lock = (e["uv_lock_sha256"][:12] + "...") if e.get("uv_lock_sha256") else "(none)"
+            deps = ", ".join(f"{k} {v}" for k, v in e.get("dependencies", {}).items())
+            lines.append(
+                f"| {i} | {e.get('implementation', '')} {e.get('python', '')} | "
+                f"{e.get('platform', '')} | {e.get('machine', '')} | `{lock}` | {deps or '-'} |"
             )
         lines.append("")
 

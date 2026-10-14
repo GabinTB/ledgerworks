@@ -19,7 +19,7 @@ so the files are the source of truth and the index is a cache.
 
 | Layer | What you get |
 |---|---|
-| **Record** | A deterministic artifact id (`{kind}__{model}__{version}__{params}__{minute}`), a `meta.json` and `README.md` sidecar per artifact, one `RunRecord` per execution (start, end, git commit, files produced), blake2b hash and size of every output file |
+| **Record** | A deterministic artifact id (`{kind}__{model}__{version}__{params}__{minute}`), a `meta.json` and `README.md` sidecar per artifact, one `RunRecord` per execution (start, end, git commit, files produced, Python, platform, `uv.lock` digest and direct dependency versions), blake2b hash and size of every output file |
 | **Query** | `latest(kind)`, `get(id)`, `list(...)`, `parents` / `children` / `ancestors` / `descendants`, DuckDB views by kind |
 | **Verify** | Re-hash files, flag crashed (partial) runs and stray temp files, find lineage edges that point to nothing, run per-kind content checks you register |
 | **Run** | `ledgerworks.jobs`: long pipelines as ordered work units with resume, update, pause, a heartbeat lock and a status file |

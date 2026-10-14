@@ -68,6 +68,7 @@ from ledgerworks.meta import (
     git_commit,
     hash_directory,
     read_meta,
+    run_environment,
     write_sidecars,
 )
 
@@ -393,7 +394,8 @@ class Ledger:
             model_card:       Model used, if any.
             pipeline_repo:    URL of the producing repo.
             verifier:         Entry-point name for content verification.
-            repo_dir:         Directory to read the git SHA from (default cwd).
+            repo_dir:         Directory to read the git SHA from, and to search
+                              upwards for uv.lock (default cwd).
             layer:            Override the default layer for this kind.
             notes:            Free text recorded on this execution's record.
             hash_pattern:     Glob for which output files to hash.
@@ -461,6 +463,7 @@ class Ledger:
             pipeline_commit=git_commit(repo_dir),
             partial=True,
             notes=notes,
+            env=run_environment(repo_dir),
         )
         meta.runs.append(record)
 

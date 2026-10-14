@@ -195,6 +195,9 @@ class RunRecord:
 
     `partial` is True from the moment the record is created until the execution
     completes cleanly.  A record left partial is a crashed run.
+
+    `env` describes where the execution ran (see `meta.run_environment`); it is
+    empty on records written before it existed and on relinked artifacts.
     """
 
     run_start: str
@@ -204,6 +207,7 @@ class RunRecord:
     partial: bool = True
     produced: list[str] = field(default_factory=list)
     notes: str = ""
+    env: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

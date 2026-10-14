@@ -29,7 +29,7 @@ from ledgerworks.artifact import (
     utc_now_iso,
 )
 from ledgerworks.ledger import DEFAULT_LAYER, VALID_LAYERS, Ledger, LedgerError, RunHandle
-from ledgerworks.meta import git_commit, hash_file, read_meta, write_sidecars
+from ledgerworks.meta import git_commit, hash_file, read_meta, run_environment, write_sidecars
 from ledgerworks.verify import (
     Finding,
     Severity,
@@ -38,7 +38,7 @@ from ledgerworks.verify import (
     verify,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 # Names from the pre-release package, kept so older code keeps importing.
 DatalakeIndex = Ledger
@@ -62,6 +62,7 @@ __all__ = [
     "__version__",
     "discover_verifiers",
     "git_commit",
+    "run_environment",
     "hash_file",
     "read_meta",
     "utc_now_iso",
