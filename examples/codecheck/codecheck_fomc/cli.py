@@ -33,7 +33,7 @@ def _runner(ledger: Ledger, args: argparse.Namespace) -> JobRunner:
     return JobRunner(
         ledger,
         allow_dirty=args.allow_dirty,
-        repo_dir=HERE.parent.parent,
+        repo_dir=HERE,  # git finds the work tree; uv.lock is the one beside pyproject.toml
         log_level="INFO" if args.verbose else "WARNING",
         handle_signals=False,
     )

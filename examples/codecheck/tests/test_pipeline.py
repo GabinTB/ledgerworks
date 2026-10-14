@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -140,6 +141,16 @@ class TestPipeline:
             shutil.rmtree(tmp_path / "expected" / "fomc_embeddings")
             report = compare(ledger, tmp_path / "expected")
         assert not report.passed and not report.no_reference
+
+    def test_cli_records_this_package_lockfile(self, tmp_path):
+        # regression: repo_dir was the git root, so env recorded the root uv.lock
+        lock = Path(__file__).resolve().parent.parent / "uv.lock"
+        args = ["--ledger", str(tmp_path / "ledger"), "--allow-dirty", "ingest"]
+        assert main(args) == 0
+        with Ledger(tmp_path / "ledger") as ledger:
+            env = ledger.latest("fomc_statements").meta.runs[-1].env
+        assert env["uv_lock_sha256"] == hashlib.sha256(lock.read_bytes()).hexdigest()
+        assert "polars" in env["dependencies"]
 
     def test_resume_after_a_crash_finishes_the_same_artifact(self, raw_dir, tmp_path):
         class Dies(HashingBackend):
