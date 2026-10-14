@@ -40,3 +40,35 @@ jobs:
           uv run --no-sync python -c "
           import ledgerworks, ledgerworks.jobs, ledgerworks.periods, ledgerworks.layout, ledgerworks.lineage
           print('core imports without numpy/pandas/polars:', ledgerworks.__version__)"
+
+  example:
+    # The CodeCheck package, offline (hashing backend; the model tests skip without the extra).
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/codecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - run: uv sync --group dev
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run pytest -q
+
+  example-model:
+    # The sentence-transformers backend on a tiny local model. macOS: PyPI ships
+    # CPU-only torch wheels there, so the install stays small.
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: examples/codecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - run: uv sync --group dev --extra model
+      - run: uv run pytest -q tests/test_model_backend.py

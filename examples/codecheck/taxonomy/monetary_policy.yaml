@@ -1,0 +1,134 @@
+# Monetary-policy narrative taxonomy (placeholder for the CodeCheck package).
+#
+# Each narrative has a label, a one-paragraph description and a few seed phrases.
+# The scorer embeds "description" and "seeds" with the same model as the documents
+# and takes their mean as the narrative vector.
+#
+# Where a label coincides with a topic of Bybee, Kelly, Manela and Xiu (2024),
+# "Business News and Business Cycles", Journal of Finance 79(5),
+# https://doi.org/10.1111/jofi.13377, `bkmx: true` says so. The topics there are
+# unsupervised LDA topics labelled by the authors; the descriptions and seeds below
+# are this package's own wording and carry no claim about the BKMX topic content.
+#
+# This file is the part of the pipeline a user replaces with their own taxonomy.
+
+name: monetary_policy
+version: "0.1.0"
+narratives:
+  - id: federal_reserve
+    label: Federal Reserve
+    bkmx: true
+    description: >
+      The Federal Open Market Committee and its policy process: the committee's
+      assessment, its decisions on the stance of monetary policy, and its mandate
+      of maximum employment and price stability.
+    seeds:
+      - The Committee decided to maintain the target range for the federal funds rate.
+      - The Federal Open Market Committee seeks to achieve maximum employment and inflation at the rate of 2 percent.
+      - In assessing the appropriate stance of monetary policy, the Committee will continue to monitor the implications of incoming information.
+
+  - id: inflation
+    label: Inflation
+    bkmx: false
+    description: >
+      The level and direction of inflation relative to the 2 percent objective:
+      elevated inflation, progress toward the objective, inflation expectations,
+      and the balance of risks to price stability.
+    seeds:
+      - Inflation remains elevated.
+      - Inflation has eased over the past year but remains somewhat elevated.
+      - The Committee is strongly committed to returning inflation to its 2 percent objective.
+      - Longer-term inflation expectations appear to remain well anchored.
+
+  - id: rate_hike
+    label: Policy tightening
+    bkmx: false
+    description: >
+      Raising the policy rate or signalling further increases: tightening the
+      stance of monetary policy, ongoing increases in the target range, and
+      restrictive policy to bring inflation down.
+    seeds:
+      - The Committee decided to raise the target range for the federal funds rate.
+      - Ongoing increases in the target range will be appropriate.
+      - The Committee anticipates that some additional policy firming may be appropriate.
+
+  - id: rate_cut
+    label: Policy easing
+    bkmx: false
+    description: >
+      Lowering the policy rate or signalling reductions: easing the stance of
+      monetary policy, reducing the target range, and the conditions under which
+      cuts would be appropriate.
+    seeds:
+      - The Committee decided to lower the target range for the federal funds rate.
+      - In considering additional adjustments to the target range, the Committee will carefully assess incoming data.
+      - The Committee will be prepared to adjust the stance of monetary policy as appropriate if risks emerge.
+
+  - id: balance_sheet
+    label: Balance sheet
+    bkmx: false
+    description: >
+      The size and composition of the Federal Reserve's securities holdings:
+      asset purchases, the pace of reinvestment, and the reduction of holdings of
+      Treasury securities and agency mortgage-backed securities.
+    seeds:
+      - The Committee will continue reducing its holdings of Treasury securities and agency debt and agency mortgage-backed securities.
+      - The Federal Reserve will continue to increase its holdings of Treasury securities by at least $80 billion per month.
+      - The Committee decided to slow the pace of decline of its securities holdings.
+
+  - id: labor_market
+    label: Job cuts
+    bkmx: true
+    description: >
+      Labor market conditions: job gains, the unemployment rate, labor demand and
+      supply coming into better balance, and risks to employment.
+    seeds:
+      - Job gains have been solid, and the unemployment rate has remained low.
+      - Labor market conditions have generally eased, and the unemployment rate has moved up but remains low.
+      - The risks to achieving its employment and inflation goals have moved into better balance.
+
+  - id: economic_growth
+    label: Economic growth
+    bkmx: true
+    description: >
+      The pace of economic activity: expansion at a solid pace, moderation in
+      spending and production, and the outlook for growth.
+    seeds:
+      - Recent indicators suggest that economic activity has continued to expand at a solid pace.
+      - Growth of economic activity has moderated from its strong pace.
+      - Recent indicators point to modest growth in spending and production.
+
+  - id: recession
+    label: Recession
+    bkmx: true
+    description: >
+      Downturn and contraction: declining output, a weakening economy, and the
+      downside risks to activity that a recession narrative emphasises.
+    seeds:
+      - Economic activity contracted sharply.
+      - The economy faces significant downside risks.
+      - The ongoing public health crisis will continue to weigh on economic activity, employment, and inflation in the near term.
+
+  - id: financial_conditions
+    label: Bank loans
+    bkmx: true
+    description: >
+      Credit and financial conditions: tighter credit conditions for households
+      and businesses, bank lending, financial stability, and the transmission of
+      policy through financial markets.
+    seeds:
+      - Tighter credit conditions for households and businesses are likely to weigh on economic activity, hiring, and inflation.
+      - The U.S. banking system is sound and resilient.
+      - Financial conditions have tightened.
+
+  - id: uncertainty
+    label: Concerns
+    bkmx: true
+    description: >
+      Uncertainty about the outlook and attention to risks: the Committee is
+      attentive to risks on both sides of its mandate, and the extent of future
+      adjustments depends on incoming data.
+    seeds:
+      - Uncertainty about the economic outlook has increased.
+      - The Committee is attentive to the risks to both sides of its dual mandate.
+      - The extent and timing of additional adjustments will depend on the evolving outlook and the balance of risks.

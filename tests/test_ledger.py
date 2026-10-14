@@ -940,3 +940,15 @@ class TestLayers:
     def test_invalid_layer_is_refused(self, tmp_path):
         with pytest.raises(LedgerError):
             Ledger(tmp_path / "l", layers={"documents": "bronze"})
+
+
+def test_relative_and_absolute_root_agree(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with Ledger("ledger") as rel:
+        with rel.run(kind="k", pipeline=PIPELINE, pipeline_version="v0.1.0") as run:
+            (run.out_dir / "a.txt").write_text("x")
+        assert rel.root.is_absolute()
+    with Ledger(tmp_path / "ledger") as absolute:
+        art = absolute.latest("k")
+        assert art.path == absolute.artifact_dir(art.layer, art.kind, art.artifact_id)
+        assert verify(absolute).ok

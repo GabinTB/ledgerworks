@@ -1,0 +1,59 @@
+[project]
+name = "codecheck-fomc"
+version = "0.1.0"
+description = "CodeCheck 2026 reproducibility package: FOMC statements scored against a monetary-policy narrative taxonomy, tracked with ledgerworks"
+requires-python = ">=3.11"
+authors = [{name = "Gabin Taibi"}]
+dependencies = [
+    "ledgerworks",
+    "numpy>=1.26",
+    "polars>=1.0",
+    "pyarrow>=14.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# The real embedding model. Without it only the `hashing` test backend is available.
+model = [
+    "sentence-transformers>=3.0",
+    "torch>=2.2",
+]
+
+[project.scripts]
+codecheck-fomc = "codecheck_fomc.cli:main"
+
+[project.entry-points."ledgerworks.jobs"]
+fomc_statements = "codecheck_fomc.corpus:IngestJob"
+fomc_embeddings = "codecheck_fomc.embed:EmbedJob"
+fomc_narrative_scores = "codecheck_fomc.score:ScoreJob"
+
+[project.entry-points."ledgerworks.verifiers"]
+fomc_statements = "codecheck_fomc.corpus:verify_artifact"
+fomc_embeddings = "codecheck_fomc.embed:verify_artifact"
+fomc_narrative_scores = "codecheck_fomc.score:verify_artifact"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["codecheck_fomc"]
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+ledgerworks = { path = "../..", editable = true }
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.9"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

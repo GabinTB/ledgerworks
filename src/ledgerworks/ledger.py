@@ -166,7 +166,9 @@ class Ledger:
             layers:  which layer a kind lands in, ``{kind: layer}``; kinds not listed go
                      to ``DEFAULT_LAYER``.  ``run(layer=...)`` overrides per call.
         """
-        self.root = Path(root)
+        # Absolute, so index rows and sidecars agree whether the ledger was opened
+        # with a relative or an absolute path.
+        self.root = Path(root).expanduser().resolve()
         self._layers = dict(layers or {})
         for kind, layer in self._layers.items():
             if layer not in VALID_LAYERS:
