@@ -35,15 +35,25 @@ uv sync --extra model          # creates .venv from uv.lock (pinned)
 uv run codecheck-fomc all      # ingest, embed, score, verify, compare
 ```
 
-Expected runtime on a laptop CPU: about 5 to 15 minutes, almost all of it in
-the embedding step (a 395M-parameter model over ~500 paragraphs). The last
-lines of the output are the comparison with `expected/` and a verdict:
+The corpus is 47 statements from 2021-01-27 to 2026-09-16, split into 289
+paragraphs. Measured runtime on an Apple M4 Pro (CPU), model already cached:
+about 20 seconds wall clock, almost all of it in the embedding step (a
+395M-parameter model over 289 paragraphs). The first run also downloads the
+model weights (1.6 GB). The last lines of the output are the comparison with
+`expected/` and a verdict (here, on the machine that produced `expected/`):
 
 ```
-fomc_narrative_scores/2024.parquet: 80 scores, max|diff| 3.1e-06
-...
+fomc_narrative_scores: ...
+  ok    fomc_narrative_scores/2021.parquet: 80 scores, max|diff| 0.00e+00
+  ...
+  ok    fomc_narrative_scores/2026.parquet: 60 scores, max|diff| 0.00e+00
+  ok    fomc_narrative_scores/narratives.parquet: 10 vectors, max|diff| 0.00e+00, min cosine 1.000000
+        7/7 files hash-identical to the reference
+
 REPRODUCED
 ```
+
+The score tables hold 470 rows in total (47 statements × 10 narratives).
 
 `uv run codecheck-fomc --help` lists the individual steps. Everything lands in
 `./ledger/` (deleted and rebuilt freely; it is in `.gitignore`).
@@ -141,7 +151,8 @@ Neural-network outputs are reproducible to floating-point tolerance across
 machines, not bit for bit (different BLAS kernels, instruction sets and thread
 counts reorder floating-point sums), hence the tolerances. The ingest step and
 the hashing test backend are exact, and `compare` reports how many files are
-hash-identical to the reference. The comparison exits non-zero on any failure.
+hash-identical to the reference. The comparison exits non-zero on any failure;
+with no reference in `expected/` yet (first run) it says so and exits 0.
 
 ## Reproducing the reference run (author's procedure)
 
