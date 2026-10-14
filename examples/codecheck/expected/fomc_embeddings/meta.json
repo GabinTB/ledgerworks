@@ -1,0 +1,109 @@
+{
+  "schema_version": 2,
+  "artifact_id": "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1202",
+  "kind": "fomc_embeddings",
+  "pipeline": "ledgerworks-codecheck-fomc",
+  "pipeline_version": "v0.1.0",
+  "pipeline_repo": "https://github.com/GabinTB/ledgerworks",
+  "hyperparams": {
+    "partition_freq": "Y",
+    "start": "2021-01-01",
+    "end": "2026-12-31",
+    "backend": "finmodernbert",
+    "model_id": "BatuhanECB/FinModernBERT-embed-large-v1",
+    "revision": "4fd33d2335e75c79df57b345aee06d49c5f85bc8",
+    "max_seq_length": 512,
+    "unit": "paragraph"
+  },
+  "sources": [
+    "fomc_statements__v0.1.0__end2026-12-31_manifest_sha256bee8b8f8_n_files47_parser_version1_partition_freqY_start2021-01-01__20261014T1201"
+  ],
+  "model_card": {
+    "model_id": "BatuhanECB/FinModernBERT-embed-large-v1",
+    "version": "4fd33d2335e7",
+    "repo": "https://huggingface.co/BatuhanECB/FinModernBERT-embed-large-v1",
+    "weights_public": true,
+    "weights_sha256": null,
+    "commit": "4fd33d2335e75c79df57b345aee06d49c5f85bc8",
+    "architecture": "ModernBERT-large, contrastively fine-tuned (sentence-transformers)",
+    "dim": 1024,
+    "pooling": "mean",
+    "trained_on": "FinModernBERT-large-DAPT + SEC-synthetic pairs (see model card)",
+    "notes": "Apache-2.0 weights; author-reported FinMTEB scores on the Hub card",
+    "backend": "sentence-transformers",
+    "serving": {
+      "device": "cpu",
+      "dtype": "float32",
+      "max_seq_length": 512,
+      "batch_size": 16,
+      "torch": "2.14.1",
+      "transformers": "5.19.0",
+      "sentence_transformers": "6.1.0",
+      "python": "3.14.5",
+      "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+      "threads": 8
+    }
+  },
+  "verifier": "fomc_embeddings",
+  "runs": [
+    {
+      "run_start": "2026-10-14T12:02:21+00:00",
+      "pipeline_version": "v0.1.0",
+      "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
+      "run_end": "2026-10-14T12:02:32+00:00",
+      "partial": false,
+      "produced": [
+        "2021.parquet",
+        "2022.parquet",
+        "2023.parquet",
+        "2024.parquet",
+        "2025.parquet",
+        "2026.parquet"
+      ],
+      "notes": ""
+    }
+  ],
+  "deprecated": false,
+  "deprecation_reason": null,
+  "notes": "",
+  "created": "2026-10-14T12:02:21+00:00",
+  "group": null,
+  "relink": null,
+  "id_minute": true,
+  "partial": false,
+  "run_start": "2026-10-14T12:02:21+00:00",
+  "run_end": "2026-10-14T12:02:32+00:00",
+  "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
+  "files": {
+    "2021.parquet": {
+      "algorithm": "blake2b",
+      "digest": "67771bf1d4328f23a7af58385b21dab720bcd93b349cfbe0358a4bf53b04a050",
+      "size_bytes": 125739
+    },
+    "2022.parquet": {
+      "algorithm": "blake2b",
+      "digest": "a41b48956601caf7bf34ad3d761d71103242d441416f9ad8e115113581b67b7e",
+      "size_bytes": 156110
+    },
+    "2023.parquet": {
+      "algorithm": "blake2b",
+      "digest": "085384c66fbd55573901d9e82b6ca19a5762f66b273775ca6fd77f20915ead84",
+      "size_bytes": 125676
+    },
+    "2024.parquet": {
+      "algorithm": "blake2b",
+      "digest": "5973e6ef859feacc8c67094ed62eee82432f1321838794145642036af76f364a",
+      "size_bytes": 144646
+    },
+    "2025.parquet": {
+      "algorithm": "blake2b",
+      "digest": "bcd8098b07957109e65499f59b3ed345a0149a5f42ccd112b5d36956b522b201",
+      "size_bytes": 175343
+    },
+    "2026.parquet": {
+      "algorithm": "blake2b",
+      "digest": "808393e00f7a74a466a4b0616705e865133cbbdff375ff5f50d064c5ede89f5e",
+      "size_bytes": 113964
+    }
+  }
+}

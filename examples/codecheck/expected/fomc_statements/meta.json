@@ -1,0 +1,80 @@
+{
+  "schema_version": 2,
+  "artifact_id": "fomc_statements__v0.1.0__end2026-12-31_manifest_sha256bee8b8f8_n_files47_parser_version1_partition_freqY_start2021-01-01__20261014T1201",
+  "kind": "fomc_statements",
+  "pipeline": "ledgerworks-codecheck-fomc",
+  "pipeline_version": "v0.1.0",
+  "pipeline_repo": "https://github.com/GabinTB/ledgerworks",
+  "hyperparams": {
+    "partition_freq": "Y",
+    "start": "2021-01-01",
+    "end": "2026-12-31",
+    "manifest_sha256": "b8ea95bd0f7f7fcec36e80a0aaae26988da189c2616cbb9211ccf8a536196309",
+    "parser_version": "1",
+    "n_files": 47
+  },
+  "sources": [],
+  "model_card": null,
+  "verifier": "fomc_statements",
+  "runs": [
+    {
+      "run_start": "2026-10-14T12:01:31+00:00",
+      "pipeline_version": "v0.1.0",
+      "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
+      "run_end": "2026-10-14T12:01:31+00:00",
+      "partial": false,
+      "produced": [
+        "2021.parquet",
+        "2022.parquet",
+        "2023.parquet",
+        "2024.parquet",
+        "2025.parquet",
+        "2026.parquet"
+      ],
+      "notes": "FOMC statements, Board of Governors of the Federal Reserve System (public domain)."
+    }
+  ],
+  "deprecated": false,
+  "deprecation_reason": null,
+  "notes": "",
+  "created": "2026-10-14T12:01:31+00:00",
+  "group": null,
+  "relink": null,
+  "id_minute": true,
+  "partial": false,
+  "run_start": "2026-10-14T12:01:31+00:00",
+  "run_end": "2026-10-14T12:01:31+00:00",
+  "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
+  "files": {
+    "2021.parquet": {
+      "algorithm": "blake2b",
+      "digest": "7c2d29500a584862069dc8ae9174a2fb74ddf93af5e28e616938779f6ae66895",
+      "size_bytes": 10362
+    },
+    "2022.parquet": {
+      "algorithm": "blake2b",
+      "digest": "8abd94580c413ea26971797158cd0c619e0f3aedbbfc40a15430285870590cd1",
+      "size_bytes": 10297
+    },
+    "2023.parquet": {
+      "algorithm": "blake2b",
+      "digest": "9703ca865f3fd99f541ae3b388507f1d0fcf2874c1a6a9108ce26f23a990c728",
+      "size_bytes": 8608
+    },
+    "2024.parquet": {
+      "algorithm": "blake2b",
+      "digest": "e08312a8a7cf39f2871222845bbd3f3e15beac4ffa35b8985ce69e8dae4ff04c",
+      "size_bytes": 8718
+    },
+    "2025.parquet": {
+      "algorithm": "blake2b",
+      "digest": "511afec043c94568ab5482866fa377a861eb7d41074c1281cfa5335e2d2c705b",
+      "size_bytes": 10542
+    },
+    "2026.parquet": {
+      "algorithm": "blake2b",
+      "digest": "0ac947570ba0d7141b4e1a5169a16e184a9ba854fc487f083b38d9448c42dc1a",
+      "size_bytes": 8384
+    }
+  }
+}
