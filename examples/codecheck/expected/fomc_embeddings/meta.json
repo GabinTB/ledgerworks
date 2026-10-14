@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "artifact_id": "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1202",
+  "artifact_id": "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1221",
   "kind": "fomc_embeddings",
   "pipeline": "ledgerworks-codecheck-fomc",
   "pipeline_version": "v0.1.0",
@@ -16,7 +16,7 @@
     "unit": "paragraph"
   },
   "sources": [
-    "fomc_statements__v0.1.0__end2026-12-31_manifest_sha256bee8b8f8_n_files47_parser_version1_partition_freqY_start2021-01-01__20261014T1201"
+    "fomc_statements__v0.1.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version2_partition_freqY_start2021-01-01__20261014T1221"
   ],
   "model_card": {
     "model_id": "BatuhanECB/FinModernBERT-embed-large-v1",
@@ -47,10 +47,10 @@
   "verifier": "fomc_embeddings",
   "runs": [
     {
-      "run_start": "2026-10-14T12:02:21+00:00",
+      "run_start": "2026-10-14T12:21:57+00:00",
       "pipeline_version": "v0.1.0",
-      "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
-      "run_end": "2026-10-14T12:02:32+00:00",
+      "pipeline_commit": "a67654f25e3b7865603e722d55eac8db14325239",
+      "run_end": "2026-10-14T12:22:06+00:00",
       "partial": false,
       "produced": [
         "2021.parquet",
@@ -60,50 +60,66 @@
         "2025.parquet",
         "2026.parquet"
       ],
-      "notes": ""
+      "notes": "",
+      "env": {
+        "python": "3.14.5",
+        "implementation": "CPython",
+        "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+        "machine": "arm64",
+        "uv_lock_sha256": "5949d58fc70654b521e705ef5b01126e6bb8374324f455c5165faad76a13113b",
+        "dependencies": {
+          "ledgerworks": "0.2.0",
+          "numpy": "2.5.4",
+          "polars": "2.0.0",
+          "pyarrow": "26.0.0",
+          "pyyaml": "6.0.3",
+          "sentence-transformers": "6.1.0",
+          "torch": "2.14.1"
+        }
+      }
     }
   ],
   "deprecated": false,
   "deprecation_reason": null,
   "notes": "",
-  "created": "2026-10-14T12:02:21+00:00",
+  "created": "2026-10-14T12:21:57+00:00",
   "group": null,
   "relink": null,
   "id_minute": true,
   "partial": false,
-  "run_start": "2026-10-14T12:02:21+00:00",
-  "run_end": "2026-10-14T12:02:32+00:00",
-  "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
+  "run_start": "2026-10-14T12:21:57+00:00",
+  "run_end": "2026-10-14T12:22:06+00:00",
+  "pipeline_commit": "a67654f25e3b7865603e722d55eac8db14325239",
   "files": {
     "2021.parquet": {
       "algorithm": "blake2b",
-      "digest": "67771bf1d4328f23a7af58385b21dab720bcd93b349cfbe0358a4bf53b04a050",
-      "size_bytes": 125739
+      "digest": "835b1d204c5e941bb9f3f02885def7aca1d28c7120521733752fecf5e2fee0ed",
+      "size_bytes": 94905
     },
     "2022.parquet": {
       "algorithm": "blake2b",
-      "digest": "a41b48956601caf7bf34ad3d761d71103242d441416f9ad8e115113581b67b7e",
-      "size_bytes": 156110
+      "digest": "fc39e5d357ea568c34bf2d8057e9a914784b05f68d2d98d22545b19289914d20",
+      "size_bytes": 106408
     },
     "2023.parquet": {
       "algorithm": "blake2b",
-      "digest": "085384c66fbd55573901d9e82b6ca19a5762f66b273775ca6fd77f20915ead84",
-      "size_bytes": 125676
+      "digest": "4725fb9e2cdbbb47b7b5d17128fb7545bb826ae7bc0b80dc0310a96ef9c611f5",
+      "size_bytes": 94933
     },
     "2024.parquet": {
       "algorithm": "blake2b",
-      "digest": "5973e6ef859feacc8c67094ed62eee82432f1321838794145642036af76f364a",
-      "size_bytes": 144646
+      "digest": "8fb14f46222e18cc4e3c0c2d6b79daa2ef7afe9c0f9474274ac5a0fd3deb9e78",
+      "size_bytes": 94984
     },
     "2025.parquet": {
       "algorithm": "blake2b",
-      "digest": "bcd8098b07957109e65499f59b3ed345a0149a5f42ccd112b5d36956b522b201",
-      "size_bytes": 175343
+      "digest": "b3b5282329752e60374856f5c7d3f0f250acd8a23075d7f3b36fa3076785ed5e",
+      "size_bytes": 110283
     },
     "2026.parquet": {
       "algorithm": "blake2b",
-      "digest": "808393e00f7a74a466a4b0616705e865133cbbdff375ff5f50d064c5ede89f5e",
-      "size_bytes": 113964
+      "digest": "6ef443c50d61d67e61a81cf22a00f41efeafbaca7f9aee5755d64f02b45ee2cc",
+      "size_bytes": 98503
     }
   }
 }

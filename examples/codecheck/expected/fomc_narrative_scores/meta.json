@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "artifact_id": "fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__paramsfd478237__20261014T1202",
+  "artifact_id": "fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__paramsfd478237__20261014T1222",
   "kind": "fomc_narrative_scores",
   "pipeline": "ledgerworks-codecheck-fomc",
   "pipeline_version": "v0.1.0",
@@ -15,7 +15,7 @@
     "narrative_vector": "mean of description and seeds"
   },
   "sources": [
-    "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1202"
+    "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1221"
   ],
   "model_card": {
     "model_id": "BatuhanECB/FinModernBERT-embed-large-v1",
@@ -46,10 +46,10 @@
   "verifier": "fomc_narrative_scores",
   "runs": [
     {
-      "run_start": "2026-10-14T12:02:32+00:00",
+      "run_start": "2026-10-14T12:22:07+00:00",
       "pipeline_version": "v0.1.0",
-      "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
-      "run_end": "2026-10-14T12:02:33+00:00",
+      "pipeline_commit": "a67654f25e3b7865603e722d55eac8db14325239",
+      "run_end": "2026-10-14T12:22:08+00:00",
       "partial": false,
       "produced": [
         "2021.parquet",
@@ -60,49 +60,65 @@
         "2026.parquet",
         "narratives.parquet"
       ],
-      "notes": ""
+      "notes": "",
+      "env": {
+        "python": "3.14.5",
+        "implementation": "CPython",
+        "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+        "machine": "arm64",
+        "uv_lock_sha256": "5949d58fc70654b521e705ef5b01126e6bb8374324f455c5165faad76a13113b",
+        "dependencies": {
+          "ledgerworks": "0.2.0",
+          "numpy": "2.5.4",
+          "polars": "2.0.0",
+          "pyarrow": "26.0.0",
+          "pyyaml": "6.0.3",
+          "sentence-transformers": "6.1.0",
+          "torch": "2.14.1"
+        }
+      }
     }
   ],
   "deprecated": false,
   "deprecation_reason": null,
   "notes": "",
-  "created": "2026-10-14T12:02:32+00:00",
+  "created": "2026-10-14T12:22:07+00:00",
   "group": null,
   "relink": null,
   "id_minute": true,
   "partial": false,
-  "run_start": "2026-10-14T12:02:32+00:00",
-  "run_end": "2026-10-14T12:02:33+00:00",
-  "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
+  "run_start": "2026-10-14T12:22:07+00:00",
+  "run_end": "2026-10-14T12:22:08+00:00",
+  "pipeline_commit": "a67654f25e3b7865603e722d55eac8db14325239",
   "files": {
     "2021.parquet": {
       "algorithm": "blake2b",
-      "digest": "868a49c226cbe9514a06aac78e31110ce8563d846a3a9ea14e21afc5923ba683",
-      "size_bytes": 3334
+      "digest": "0b9785a01963d04508defd987f4214c5cb81bb8eda9a1220e6e8e160c34e2831",
+      "size_bytes": 3325
     },
     "2022.parquet": {
       "algorithm": "blake2b",
-      "digest": "8279a92729fc2f2f3f358b8ca3d4c25d97938386d6c0f9d65bf9a3565c31df88",
-      "size_bytes": 3388
+      "digest": "b62c87da255a6774a88d773ce0b145d53dc86ec5aadaba40cfbf4d0eb92c2ae8",
+      "size_bytes": 3396
     },
     "2023.parquet": {
       "algorithm": "blake2b",
-      "digest": "14454004ef9f5434c895215ecb6bb53dbe8beb1478c2872ead5ed7f21ff46e87",
+      "digest": "9f02ebee4c9821650d235f1fccd4fe711a81dbe8275672a7213073d893cb90bb",
       "size_bytes": 3423
     },
     "2024.parquet": {
       "algorithm": "blake2b",
-      "digest": "f04bfc55d82343d95d0314952affb2cf3e2157322cab5cf2fd36a5bc846f7323",
+      "digest": "758b27ed34be6e77ada38e58a16677ee81f2349e90f6baec91162701aa2410e9",
       "size_bytes": 3365
     },
     "2025.parquet": {
       "algorithm": "blake2b",
-      "digest": "351ce569b3f100a6c4a5d0473a65771bcaafffc3e3a05720a034be0e58ecc4d5",
-      "size_bytes": 3523
+      "digest": "ac1161013202f15f921b9bd1d1b38a34f2631d8993663dcfb2ac3283df21c462",
+      "size_bytes": 3386
     },
     "2026.parquet": {
       "algorithm": "blake2b",
-      "digest": "6b7efaefe8acc85abb35e946da8d495ec9c17dd200fbd3cbb0b60d03e0121067",
+      "digest": "a617c8d875378da086bc4c9c819beadb9fb0835978cb7bc080d038c42b550f0f",
       "size_bytes": 3120
     },
     "narratives.parquet": {

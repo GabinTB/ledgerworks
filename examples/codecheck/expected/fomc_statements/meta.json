@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "artifact_id": "fomc_statements__v0.1.0__end2026-12-31_manifest_sha256bee8b8f8_n_files47_parser_version1_partition_freqY_start2021-01-01__20261014T1201",
+  "artifact_id": "fomc_statements__v0.1.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version2_partition_freqY_start2021-01-01__20261014T1221",
   "kind": "fomc_statements",
   "pipeline": "ledgerworks-codecheck-fomc",
   "pipeline_version": "v0.1.0",
@@ -9,19 +9,19 @@
     "partition_freq": "Y",
     "start": "2021-01-01",
     "end": "2026-12-31",
-    "manifest_sha256": "b8ea95bd0f7f7fcec36e80a0aaae26988da189c2616cbb9211ccf8a536196309",
-    "parser_version": "1",
-    "n_files": 47
+    "manifest_sha256": "3956b66e0bef1dffb67c7e0f3a8740e5d9a14d548bd17cc9e3ebe80c0d46c536",
+    "parser_version": "2",
+    "n_files": 46
   },
   "sources": [],
   "model_card": null,
   "verifier": "fomc_statements",
   "runs": [
     {
-      "run_start": "2026-10-14T12:01:31+00:00",
+      "run_start": "2026-10-14T12:21:54+00:00",
       "pipeline_version": "v0.1.0",
-      "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
-      "run_end": "2026-10-14T12:01:31+00:00",
+      "pipeline_commit": "a67654f25e3b7865603e722d55eac8db14325239",
+      "run_end": "2026-10-14T12:21:54+00:00",
       "partial": false,
       "produced": [
         "2021.parquet",
@@ -31,50 +31,66 @@
         "2025.parquet",
         "2026.parquet"
       ],
-      "notes": "FOMC statements, Board of Governors of the Federal Reserve System (public domain)."
+      "notes": "FOMC statements, Board of Governors of the Federal Reserve System (public domain).",
+      "env": {
+        "python": "3.14.5",
+        "implementation": "CPython",
+        "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+        "machine": "arm64",
+        "uv_lock_sha256": "5949d58fc70654b521e705ef5b01126e6bb8374324f455c5165faad76a13113b",
+        "dependencies": {
+          "ledgerworks": "0.2.0",
+          "numpy": "2.5.4",
+          "polars": "2.0.0",
+          "pyarrow": "26.0.0",
+          "pyyaml": "6.0.3",
+          "sentence-transformers": "6.1.0",
+          "torch": "2.14.1"
+        }
+      }
     }
   ],
   "deprecated": false,
   "deprecation_reason": null,
   "notes": "",
-  "created": "2026-10-14T12:01:31+00:00",
+  "created": "2026-10-14T12:21:54+00:00",
   "group": null,
   "relink": null,
   "id_minute": true,
   "partial": false,
-  "run_start": "2026-10-14T12:01:31+00:00",
-  "run_end": "2026-10-14T12:01:31+00:00",
-  "pipeline_commit": "f1c36989aafd80ceb8efac5fc75f20329abee409",
+  "run_start": "2026-10-14T12:21:54+00:00",
+  "run_end": "2026-10-14T12:21:54+00:00",
+  "pipeline_commit": "a67654f25e3b7865603e722d55eac8db14325239",
   "files": {
     "2021.parquet": {
       "algorithm": "blake2b",
-      "digest": "7c2d29500a584862069dc8ae9174a2fb74ddf93af5e28e616938779f6ae66895",
-      "size_bytes": 10362
+      "digest": "092979f5717af951bb541558f1da597fb2e42b70d2e2127dd7b64ccb4d6020f7",
+      "size_bytes": 10393
     },
     "2022.parquet": {
       "algorithm": "blake2b",
-      "digest": "8abd94580c413ea26971797158cd0c619e0f3aedbbfc40a15430285870590cd1",
-      "size_bytes": 10297
+      "digest": "09f8fa82b56defc73feb000058526915b30fc7c892ffa3c5f131fbc86806868e",
+      "size_bytes": 10090
     },
     "2023.parquet": {
       "algorithm": "blake2b",
-      "digest": "9703ca865f3fd99f541ae3b388507f1d0fcf2874c1a6a9108ce26f23a990c728",
-      "size_bytes": 8608
+      "digest": "c6078b6fd86068b5bb74be09d800e35cd6e1a1564c9131ff9a1825f164a7d60b",
+      "size_bytes": 8616
     },
     "2024.parquet": {
       "algorithm": "blake2b",
-      "digest": "e08312a8a7cf39f2871222845bbd3f3e15beac4ffa35b8985ce69e8dae4ff04c",
-      "size_bytes": 8718
+      "digest": "6687c0a0702f7e4aae1d7f8ed12fc9648e79638830999f9bc27b94940fbeaa3f",
+      "size_bytes": 8745
     },
     "2025.parquet": {
       "algorithm": "blake2b",
-      "digest": "511afec043c94568ab5482866fa377a861eb7d41074c1281cfa5335e2d2c705b",
-      "size_bytes": 10542
+      "digest": "a189841230ba61dd715f8596cbdba9719c5b4b39e1b6d173c7a113c50221cbd9",
+      "size_bytes": 9168
     },
     "2026.parquet": {
       "algorithm": "blake2b",
-      "digest": "0ac947570ba0d7141b4e1a5169a16e184a9ba854fc487f083b38d9448c42dc1a",
-      "size_bytes": 8384
+      "digest": "0e23450f86748098ff0c146aca1697524f2f360967585242309b7b9095e136b2",
+      "size_bytes": 8457
     }
   }
 }

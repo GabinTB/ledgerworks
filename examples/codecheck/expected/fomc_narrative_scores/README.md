@@ -1,10 +1,10 @@
-# fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__paramsfd478237__20261014T1202
+# fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__paramsfd478237__20261014T1222
 
 - **Kind**: `fomc_narrative_scores`
 - **Pipeline**: `ledgerworks-codecheck-fomc` version `v0.1.0`
 - **Repo**: https://github.com/GabinTB/ledgerworks
 - **Verifier**: `fomc_narrative_scores`
-- **Created**: 2026-10-14T12:02:32+00:00
+- **Created**: 2026-10-14T12:22:07+00:00
 - **Executions**: 1
 
 ## Hyperparameters
@@ -21,7 +21,13 @@
 
 | # | Started | Finished | Commit | Version | Outputs | State |
 | --: | --- | --- | --- | --- | --: | --- |
-| 1 | 2026-10-14T12:02:32+00:00 | 2026-10-14T12:02:33+00:00 | `f1c36989aa...` | v0.1.0 | 7 | complete |
+| 1 | 2026-10-14T12:22:07+00:00 | 2026-10-14T12:22:08+00:00 | `a67654f25e...` | v0.1.0 | 7 | complete |
+
+## Environment
+
+| # | Python | Platform | Machine | uv.lock (sha256) | Dependencies |
+| --: | --- | --- | --- | --- | --- |
+| 1 | CPython 3.14.5 | macOS-27.0.1-arm64-arm-64bit-Mach-O | arm64 | `5949d58fc706...` | ledgerworks 0.2.0, numpy 2.5.4, polars 2.0.0, pyarrow 26.0.0, pyyaml 6.0.3, sentence-transformers 6.1.0, torch 2.14.1 |
 
 ## Model
 
@@ -55,20 +61,20 @@
 
 ## Inputs
 
-- `fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1202`
+- `fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1221`
 
 ## Files
 
-7 files, 57.9 KB total. Digests are `blake2b`.
+7 files, 57.8 KB total. Digests are `blake2b`.
 
 | File | Size | Digest |
 | --- | ---: | --- |
-| `2021.parquet` | 3.3 KB | `868a49c226cbe951...` |
-| `2022.parquet` | 3.3 KB | `8279a92729fc2f2f...` |
-| `2023.parquet` | 3.3 KB | `14454004ef9f5434...` |
-| `2024.parquet` | 3.3 KB | `f04bfc55d82343d9...` |
-| `2025.parquet` | 3.4 KB | `351ce569b3f100a6...` |
-| `2026.parquet` | 3.0 KB | `6b7efaefe8acc85a...` |
+| `2021.parquet` | 3.2 KB | `0b9785a01963d045...` |
+| `2022.parquet` | 3.3 KB | `b62c87da255a6774...` |
+| `2023.parquet` | 3.3 KB | `9f02ebee4c982165...` |
+| `2024.parquet` | 3.3 KB | `758b27ed34be6e77...` |
+| `2025.parquet` | 3.3 KB | `ac1161013202f15f...` |
+| `2026.parquet` | 3.0 KB | `a617c8d875378da0...` |
 | `narratives.parquet` | 38.3 KB | `24237df8ba6bcd9d...` |
 
 ---
