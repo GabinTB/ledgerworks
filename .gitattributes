@@ -1,0 +1,3 @@
+* text=auto eol=lf
+examples/codecheck/data/raw/html/*.htm -text
+*.parquet binary
