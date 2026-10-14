@@ -264,13 +264,6 @@
       "size_bytes": 82323,
       "retrieved_at": "2026-10-14T12:01:10+00:00"
     },
-    "monetary20250822a.htm": {
-      "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250822a.htm",
-      "date": "2025-08-22",
-      "sha256": "fc150da12ec6171bfbeb37ffdd8e54dfdb2191f5623cafdcba1f4c130010a2d3",
-      "size_bytes": 82837,
-      "retrieved_at": "2026-10-14T12:01:11+00:00"
-    },
     "monetary20250917a.htm": {
       "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250917a.htm",
       "date": "2025-09-17",
