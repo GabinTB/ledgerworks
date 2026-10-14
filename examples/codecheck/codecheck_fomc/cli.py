@@ -73,7 +73,10 @@ def cmd_verify(ledger: Ledger, args: argparse.Namespace) -> int:
 def cmd_compare(ledger: Ledger, args: argparse.Namespace) -> int:
     report = compare(ledger, args.expected, atol=args.atol, min_cos=args.min_cos)
     print(report)
-    print("\nREPRODUCED" if report.passed else "\nNOT REPRODUCED")
+    if report.no_reference:
+        print("\nNO REFERENCE YET: run `codecheck-fomc freeze`")
+    else:
+        print("\nREPRODUCED" if report.passed else "\nNOT REPRODUCED")
     return 0 if report.passed else 1
 
 

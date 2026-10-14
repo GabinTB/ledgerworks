@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import polars as pl
@@ -10,6 +11,7 @@ from ledgerworks import Ledger, verify
 from ledgerworks.jobs import JobRunner
 
 from codecheck_fomc.backends import HashingBackend
+from codecheck_fomc.cli import main
 from codecheck_fomc.compare import compare, freeze
 from codecheck_fomc.corpus import IngestJob, Manifest, parse_statement
 from codecheck_fomc.embed import EmbedJob
@@ -101,6 +103,27 @@ class TestPipeline:
             report = compare(c, tmp_path / "expected")
             assert not report.passed
             assert "FAIL" in str(report)
+
+    def test_compare_without_reference_exits_zero(self, raw_dir, tmp_path, capsys):
+        # regression: `all && freeze` on a first run never reached freeze
+        expected = tmp_path / "expected"
+        expected.mkdir()
+        (expected / "README.md").write_text("reference run\n")
+        with Ledger(tmp_path / "ledger") as ledger:
+            run_all(ledger, raw_dir)
+            report = compare(ledger, expected)
+        assert report.passed and report.no_reference
+        args = ["--ledger", str(tmp_path / "ledger"), "--expected", str(expected), "compare"]
+        assert main(args) == 0
+        assert "NO REFERENCE YET" in capsys.readouterr().out
+
+    def test_compare_with_a_partial_reference_fails(self, raw_dir, tmp_path):
+        with Ledger(tmp_path / "ledger") as ledger:
+            run_all(ledger, raw_dir)
+            freeze(ledger, tmp_path / "expected")
+            shutil.rmtree(tmp_path / "expected" / "fomc_embeddings")
+            report = compare(ledger, tmp_path / "expected")
+        assert not report.passed and not report.no_reference
 
     def test_resume_after_a_crash_finishes_the_same_artifact(self, raw_dir, tmp_path):
         class Dies(HashingBackend):

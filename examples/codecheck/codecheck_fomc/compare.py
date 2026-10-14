@@ -30,6 +30,7 @@ KINDS = ("fomc_statements", "fomc_embeddings", "fomc_narrative_scores")
 @dataclass
 class Report:
     passed: bool = True
+    no_reference: bool = False
     lines: list[str] = field(default_factory=list)
 
     def ok(self, msg: str) -> None:
@@ -69,6 +70,11 @@ def compare(
     min_cos: float = 0.9999,
 ) -> Report:
     report = Report()
+    if not any((expected_dir / kind).exists() for kind in KINDS):
+        # first run: nothing frozen yet, so nothing to fail against
+        report.no_reference = True
+        report.lines.append(f"no reference yet in {expected_dir}, run freeze")
+        return report
     for kind in KINDS:
         exp_dir = expected_dir / kind
         if not exp_dir.exists():
