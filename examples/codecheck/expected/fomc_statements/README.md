@@ -1,10 +1,10 @@
-# fomc_statements__v0.1.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version2_partition_freqY_start2021-01-01__20261014T1221
+# fomc_statements__v0.1.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261014T1238
 
 - **Kind**: `fomc_statements`
 - **Pipeline**: `ledgerworks-codecheck-fomc` version `v0.1.0`
 - **Repo**: https://github.com/GabinTB/ledgerworks
 - **Verifier**: `fomc_statements`
-- **Created**: 2026-10-14T12:21:54+00:00
+- **Created**: 2026-10-14T12:38:37+00:00
 - **Executions**: 1
 
 ## Hyperparameters
@@ -12,7 +12,7 @@
 - `end` = `'2026-12-31'`
 - `manifest_sha256` = `'3956b66e0bef1dffb67c7e0f3a8740e5d9a14d548bd17cc9e3ebe80c0d46c536'`
 - `n_files` = `46`
-- `parser_version` = `'2'`
+- `parser_version` = `'3'`
 - `partition_freq` = `'Y'`
 - `start` = `'2021-01-01'`
 
@@ -20,26 +20,26 @@
 
 | # | Started | Finished | Commit | Version | Outputs | State |
 | --: | --- | --- | --- | --- | --: | --- |
-| 1 | 2026-10-14T12:21:54+00:00 | 2026-10-14T12:21:54+00:00 | `a67654f25e...` | v0.1.0 | 6 | complete |
+| 1 | 2026-10-14T12:38:37+00:00 | 2026-10-14T12:38:38+00:00 | `162803ee1a...` | v0.1.0 | 6 | complete |
 
 ## Environment
 
 | # | Python | Platform | Machine | uv.lock (sha256) | Dependencies |
 | --: | --- | --- | --- | --- | --- |
-| 1 | CPython 3.14.5 | macOS-27.0.1-arm64-arm-64bit-Mach-O | arm64 | `5949d58fc706...` | ledgerworks 0.2.0, numpy 2.5.4, polars 2.0.0, pyarrow 26.0.0, pyyaml 6.0.3, sentence-transformers 6.1.0, torch 2.14.1 |
+| 1 | CPython 3.14.5 | macOS-27.0.1-arm64-arm-64bit-Mach-O | arm64 | `efa752e59e97...` | ledgerworks 0.2.0, numpy 2.5.4, polars 2.0.0, pyarrow 26.0.0, pyyaml 6.0.3, sentence-transformers 6.1.0, torch 2.14.1 |
 
 ## Files
 
-6 files, 54.2 KB total. Digests are `blake2b`.
+6 files, 50.6 KB total. Digests are `blake2b`.
 
 | File | Size | Digest |
 | --- | ---: | --- |
-| `2021.parquet` | 10.1 KB | `092979f5717af951...` |
-| `2022.parquet` | 9.9 KB | `09f8fa82b56defc7...` |
-| `2023.parquet` | 8.4 KB | `c6078b6fd86068b5...` |
-| `2024.parquet` | 8.5 KB | `6687c0a0702f7e4a...` |
-| `2025.parquet` | 9.0 KB | `a189841230ba61dd...` |
-| `2026.parquet` | 8.3 KB | `0e23450f86748098...` |
+| `2021.parquet` | 9.8 KB | `b2fe247497edc823...` |
+| `2022.parquet` | 9.3 KB | `d9c85d5fdeae7b1c...` |
+| `2023.parquet` | 8.0 KB | `b6d43ac7adfdc39a...` |
+| `2024.parquet` | 7.9 KB | `110f345933db702f...` |
+| `2025.parquet` | 8.1 KB | `9b2f2b00a90ef5e5...` |
+| `2026.parquet` | 7.5 KB | `e35a8d309edc8c8a...` |
 
 ---
 

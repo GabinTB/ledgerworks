@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "artifact_id": "fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__paramsfd478237__20261014T1222",
+  "artifact_id": "fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__paramsfd478237__20261014T1238",
   "kind": "fomc_narrative_scores",
   "pipeline": "ledgerworks-codecheck-fomc",
   "pipeline_version": "v0.1.0",
@@ -15,7 +15,7 @@
     "narrative_vector": "mean of description and seeds"
   },
   "sources": [
-    "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1221"
+    "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1238"
   ],
   "model_card": {
     "model_id": "BatuhanECB/FinModernBERT-embed-large-v1",
@@ -46,10 +46,10 @@
   "verifier": "fomc_narrative_scores",
   "runs": [
     {
-      "run_start": "2026-10-14T12:22:07+00:00",
+      "run_start": "2026-10-14T12:38:51+00:00",
       "pipeline_version": "v0.1.0",
-      "pipeline_commit": "a67654f25e3b7865603e722d55eac8db14325239",
-      "run_end": "2026-10-14T12:22:08+00:00",
+      "pipeline_commit": "162803ee1a1963475c972e27f1abe23b8e029a1d",
+      "run_end": "2026-10-14T12:38:52+00:00",
       "partial": false,
       "produced": [
         "2021.parquet",
@@ -66,7 +66,7 @@
         "implementation": "CPython",
         "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
         "machine": "arm64",
-        "uv_lock_sha256": "5949d58fc70654b521e705ef5b01126e6bb8374324f455c5165faad76a13113b",
+        "uv_lock_sha256": "efa752e59e9743654f901ed6c7ae7f6759a03c2b904ddac68ca4940453ce33d1",
         "dependencies": {
           "ledgerworks": "0.2.0",
           "numpy": "2.5.4",
@@ -82,43 +82,43 @@
   "deprecated": false,
   "deprecation_reason": null,
   "notes": "",
-  "created": "2026-10-14T12:22:07+00:00",
+  "created": "2026-10-14T12:38:51+00:00",
   "group": null,
   "relink": null,
   "id_minute": true,
   "partial": false,
-  "run_start": "2026-10-14T12:22:07+00:00",
-  "run_end": "2026-10-14T12:22:08+00:00",
-  "pipeline_commit": "a67654f25e3b7865603e722d55eac8db14325239",
+  "run_start": "2026-10-14T12:38:51+00:00",
+  "run_end": "2026-10-14T12:38:52+00:00",
+  "pipeline_commit": "162803ee1a1963475c972e27f1abe23b8e029a1d",
   "files": {
     "2021.parquet": {
       "algorithm": "blake2b",
-      "digest": "0b9785a01963d04508defd987f4214c5cb81bb8eda9a1220e6e8e160c34e2831",
-      "size_bytes": 3325
+      "digest": "78755dcc5b3f4ce4429c0645e839776f26af75d4bbd1cba9bd6a9357f5a0b079",
+      "size_bytes": 3334
     },
     "2022.parquet": {
       "algorithm": "blake2b",
-      "digest": "b62c87da255a6774a88d773ce0b145d53dc86ec5aadaba40cfbf4d0eb92c2ae8",
+      "digest": "6b5cc8dac6a06a8b878607d7f4021e6fcbab60307473c6304b75ca87af000f5f",
       "size_bytes": 3396
     },
     "2023.parquet": {
       "algorithm": "blake2b",
-      "digest": "9f02ebee4c9821650d235f1fccd4fe711a81dbe8275672a7213073d893cb90bb",
+      "digest": "dc9a7fe01e62a2683b4bb4db3c9e4750ac40e7750e05af37d00f65e32b1a9e75",
       "size_bytes": 3423
     },
     "2024.parquet": {
       "algorithm": "blake2b",
-      "digest": "758b27ed34be6e77ada38e58a16677ee81f2349e90f6baec91162701aa2410e9",
+      "digest": "b72e613dff84a0bbde9868262ebbb775c8458c5aeaddfdd231e9c1c833d22c91",
       "size_bytes": 3365
     },
     "2025.parquet": {
       "algorithm": "blake2b",
-      "digest": "ac1161013202f15f921b9bd1d1b38a34f2631d8993663dcfb2ac3283df21c462",
+      "digest": "53cfcb2db7603983ddd9c3ac4a269608fa3e0386000783cba769d3fe64043e8c",
       "size_bytes": 3386
     },
     "2026.parquet": {
       "algorithm": "blake2b",
-      "digest": "a617c8d875378da086bc4c9c819beadb9fb0835978cb7bc080d038c42b550f0f",
+      "digest": "24ff7f02e16a92dbe729d2f7f0891a74b1c424916f521d832fdcc9471d311a47",
       "size_bytes": 3120
     },
     "narratives.parquet": {
