@@ -175,31 +175,30 @@ with no reference in `expected/` yet (first run) it says so and exits 0.
 
 ## Cross-machine check
 
-`expected/` was produced on an Apple M4 Pro (macOS, arm64, CPython 3.14.5, PyPI
-torch 2.14.1). The manual workflow
+`expected/` was produced on an Apple M4 Pro (macOS, arm64, CPython 3.12.13, PyPI
+torch 2.14.1; Python is pinned by `.python-version`). The manual workflow
 [`reproduce.yml`](../../.github/workflows/reproduce.yml) rebuilds everything on
 GitHub-hosted runners with `uv sync --extra model` and `codecheck-fomc all`, and
 uploads every `meta.json` and the comparison output. Run of 14 October 2026 at
-commit `556285d`:
+commit `7619ab4`:
 
 | | Linux (ubuntu-latest) | Windows (windows-latest) |
 |---|---|---|
-| Machine | x86_64, CPython 3.14.8, torch 2.14.1+cpu | AMD64, CPython 3.14.7, torch 2.14.1 |
+| Machine | x86_64, CPython 3.12.3, torch 2.14.1+cpu | AMD64, CPython 3.12.10, torch 2.14.1 |
 | Verdict | REPRODUCED | REPRODUCED |
 | statements | 46 identical, 6/6 files hash-identical | 46 identical, 6/6 files hash-identical |
-| embeddings, max\|diff\| | 6.97e-06 | 5.95e-06 |
+| embeddings, max\|diff\| | 6.97e-06 | 5.45e-06 |
 | embeddings, min cosine | 1.000000 | 1.000000 |
-| scores, max\|diff\| | 5.01e-06 | 4.11e-06 |
-| narrative vectors, max\|diff\| / min cosine | 3.73e-07 / 1.000000 | 3.58e-07 / 1.000000 |
-| Wall time, `all` (model download included) | 147 s | 148 s |
+| scores, max\|diff\| | 5.01e-06 | 3.76e-06 |
+| narrative vectors, max\|diff\| / min cosine | 3.73e-07 / 1.000000 | 3.80e-07 / 1.000000 |
+| Wall time, `all` (model cached) | 135 s | 175 s |
 
 The largest difference is about 14 times below the tolerance (`atol 1e-4`), and
 no file of the embedding or score tables is bit-identical across machines, as
-expected from different CPUs and BLAS kernels. On Windows the artifact ids of
-`fomc_statements` and `fomc_narrative_scores`, and the recorded `uv.lock`
-digest, differ from the reference: Git for Windows checks out `MANIFEST.json`,
-the taxonomy and `uv.lock` with CRLF line endings, which changes their sha256.
-The data they describe, and every compared value, are the same.
+expected from different CPUs and BLAS kernels. The artifact ids (up to the
+creation minute) and the recorded `uv.lock` digest are the same on all three
+machines: `.gitattributes` keeps text files in LF on every checkout and the raw
+HTML byte for byte.
 
 ## Reproducing the reference run (author's procedure)
 
