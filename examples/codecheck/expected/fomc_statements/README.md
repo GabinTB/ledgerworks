@@ -1,10 +1,10 @@
-# fomc_statements__v0.1.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261014T1238
+# fomc_statements__v0.1.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261014T1256
 
 - **Kind**: `fomc_statements`
 - **Pipeline**: `ledgerworks-codecheck-fomc` version `v0.1.0`
 - **Repo**: https://github.com/GabinTB/ledgerworks
 - **Verifier**: `fomc_statements`
-- **Created**: 2026-10-14T12:38:37+00:00
+- **Created**: 2026-10-14T12:56:21+00:00
 - **Executions**: 1
 
 ## Hyperparameters
@@ -20,13 +20,13 @@
 
 | # | Started | Finished | Commit | Version | Outputs | State |
 | --: | --- | --- | --- | --- | --: | --- |
-| 1 | 2026-10-14T12:38:37+00:00 | 2026-10-14T12:38:38+00:00 | `162803ee1a...` | v0.1.0 | 6 | complete |
+| 1 | 2026-10-14T12:56:21+00:00 | 2026-10-14T12:56:21+00:00 | `f6ad28a5a8...` | v0.1.0 | 6 | complete |
 
 ## Environment
 
 | # | Python | Platform | Machine | uv.lock (sha256) | Dependencies |
 | --: | --- | --- | --- | --- | --- |
-| 1 | CPython 3.14.5 | macOS-27.0.1-arm64-arm-64bit-Mach-O | arm64 | `efa752e59e97...` | ledgerworks 0.2.0, numpy 2.5.4, polars 2.0.0, pyarrow 26.0.0, pyyaml 6.0.3, sentence-transformers 6.1.0, torch 2.14.1 |
+| 1 | CPython 3.12.13 | macOS-27.0.1-arm64-arm-64bit | arm64 | `efa752e59e97...` | ledgerworks 0.2.0, numpy 2.5.4, polars 2.0.0, pyarrow 26.0.0, pyyaml 6.0.3, sentence-transformers 6.1.0, torch 2.14.1 |
 
 ## Files
 

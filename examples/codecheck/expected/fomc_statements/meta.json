@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "artifact_id": "fomc_statements__v0.1.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261014T1238",
+  "artifact_id": "fomc_statements__v0.1.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261014T1256",
   "kind": "fomc_statements",
   "pipeline": "ledgerworks-codecheck-fomc",
   "pipeline_version": "v0.1.0",
@@ -18,10 +18,10 @@
   "verifier": "fomc_statements",
   "runs": [
     {
-      "run_start": "2026-10-14T12:38:37+00:00",
+      "run_start": "2026-10-14T12:56:21+00:00",
       "pipeline_version": "v0.1.0",
-      "pipeline_commit": "162803ee1a1963475c972e27f1abe23b8e029a1d",
-      "run_end": "2026-10-14T12:38:38+00:00",
+      "pipeline_commit": "f6ad28a5a82f6f716e173232259e583422fb49ec",
+      "run_end": "2026-10-14T12:56:21+00:00",
       "partial": false,
       "produced": [
         "2021.parquet",
@@ -33,9 +33,9 @@
       ],
       "notes": "FOMC statements, Board of Governors of the Federal Reserve System (public domain).",
       "env": {
-        "python": "3.14.5",
+        "python": "3.12.13",
         "implementation": "CPython",
-        "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+        "platform": "macOS-27.0.1-arm64-arm-64bit",
         "machine": "arm64",
         "uv_lock_sha256": "efa752e59e9743654f901ed6c7ae7f6759a03c2b904ddac68ca4940453ce33d1",
         "dependencies": {
@@ -53,14 +53,14 @@
   "deprecated": false,
   "deprecation_reason": null,
   "notes": "",
-  "created": "2026-10-14T12:38:37+00:00",
+  "created": "2026-10-14T12:56:21+00:00",
   "group": null,
   "relink": null,
   "id_minute": true,
   "partial": false,
-  "run_start": "2026-10-14T12:38:37+00:00",
-  "run_end": "2026-10-14T12:38:38+00:00",
-  "pipeline_commit": "162803ee1a1963475c972e27f1abe23b8e029a1d",
+  "run_start": "2026-10-14T12:56:21+00:00",
+  "run_end": "2026-10-14T12:56:21+00:00",
+  "pipeline_commit": "f6ad28a5a82f6f716e173232259e583422fb49ec",
   "files": {
     "2021.parquet": {
       "algorithm": "blake2b",
