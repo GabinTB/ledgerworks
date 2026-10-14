@@ -126,6 +126,8 @@ a complete job.
   package (FOMC statements, an open embedding model, a macro-narrative
   taxonomy) submitted to the University of Twente CodeCheck 2026. Run it with
   one command and compare the outputs to the committed reference.
+  Reproduce it: `cd examples/codecheck && uv sync --extra model && uv run codecheck-fomc all`
+  (see [`examples/codecheck/README.md`](examples/codecheck/README.md)).
 
 ## Development
 
