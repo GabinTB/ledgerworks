@@ -1,0 +1,77 @@
+[project]
+name = "ledgerworks"
+version = "0.1.0"
+description = "Run, record, verify and trace pipeline artifacts: immutable outputs with provenance sidecars, lineage and a rebuildable index"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [{name = "Gabin Taibi"}]
+keywords = ["provenance", "lineage", "reproducibility", "artifacts", "data-management", "research"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Version Control",
+]
+
+# The core (artifact, ledger, meta, verify, lineage, jobs, periods, layout) is stdlib only.
+dependencies = []
+
+[project.optional-dependencies]
+# .env support for the two command lines
+cli = ["python-dotenv>=1.0"]
+# pandas DateOffset for Span.offset
+pandas = ["pandas>=2.0"]
+# relink / equivalence checks over parquet partitions
+relink = ["numpy>=1.26", "polars>=0.20", "pyarrow>=14.0"]
+all = ["ledgerworks[cli,pandas,relink]"]
+
+[project.urls]
+Homepage = "https://github.com/GabinTB/ledgerworks"
+Repository = "https://github.com/GabinTB/ledgerworks"
+Issues = "https://github.com/GabinTB/ledgerworks/issues"
+
+[project.scripts]
+ledgerworks = "ledgerworks.cli:main"
+ledgerworks-jobs = "ledgerworks.jobs_cli:main"
+
+[build-system]
+requires      = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ledgerworks"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/ledgerworks", "tests", "README.md", "LICENSE", "pyproject.toml"]
+
+[tool.uv]
+package = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.9",
+    "pandas>=2.0",
+    "numpy>=1.26",
+    "polars>=0.20",
+    "pyarrow>=14.0",
+    "python-dotenv>=1.0",
+    "duckdb>=1.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -1,0 +1,90 @@
+name: Release
+
+# Pushing a tag `vX.Y.Z` runs the full CI, builds the distribution, publishes it
+# to TestPyPI, installs it from there as a smoke test, then publishes to PyPI.
+# Both publishes use PyPI trusted publishing (OIDC): no API tokens to store.
+# One-time setup on pypi.org and test.pypi.org -> project -> Publishing:
+#   owner GabinTB, repository ledgerworks, workflow release.yml,
+#   environment testpypi (on test.pypi.org) / pypi (on pypi.org).
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Check that the tag matches pyproject version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          ver="$(uv version --short)"
+          test "$tag" = "$ver" || { echo "tag v$tag != pyproject version $ver"; exit 1; }
+      - run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  testpypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/ledgerworks
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
+  smoke:
+    needs: testpypi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: astral-sh/setup-uv@v5
+      - name: Install from TestPyPI and import
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          uv venv --python 3.12
+          # dependencies (none for the core) still resolve from PyPI; only ledgerworks comes from TestPyPI
+          for i in 1 2 3 4 5 6; do
+            uv pip install --index-url https://test.pypi.org/simple/ \
+              --extra-index-url https://pypi.org/simple/ --index-strategy unsafe-best-match \
+              "ledgerworks==$ver" && break || sleep 30
+          done
+          uv run --no-sync python -c "import ledgerworks; assert ledgerworks.__version__ == '$ver'; print('ok', ledgerworks.__version__)"
+          uv run --no-sync ledgerworks --help
+
+  pypi:
+    needs: smoke
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ledgerworks
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+    tags-ignore: ["v*"]      # tag pushes run release.yml, which runs the same checks first
+  pull_request:
+    branches: ["main"]
+  workflow_call:             # release.yml reuses this job as its gate
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python }}
+      - run: uv sync --group dev
+      - run: uv run ruff check src tests
+      - run: uv run ruff format --check src tests
+      - run: uv run pytest -q
+
+  core-is-stdlib:
+    # The core must import with no third-party package installed.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv venv --python 3.12 && uv pip install --no-deps .
+      - run: |
+          uv run --no-sync python -c "
+          import ledgerworks, ledgerworks.jobs, ledgerworks.periods, ledgerworks.layout, ledgerworks.lineage
+          print('core imports without numpy/pandas/polars:', ledgerworks.__version__)"
