@@ -19,13 +19,13 @@ jobs:
         shell: bash
         working-directory: examples/codecheck
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: true # Python: examples/codecheck/.python-version
       - name: Model cache location
         run: echo "HF_HOME=$RUNNER_TEMP/hf" >> "$GITHUB_ENV"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/hf
           key: hf-${{ runner.os }}-FinModernBERT-embed-large-v1-4fd33d2335e7
@@ -47,7 +47,7 @@ jobs:
           find ledger -name meta.json | while read -r f; do
             mkdir -p "$out/$(dirname "$f")" && cp "$f" "$out/$f"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reproduce-${{ matrix.os }}
