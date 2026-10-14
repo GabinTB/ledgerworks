@@ -43,6 +43,7 @@ PAGE = """<!DOCTYPE html><html><head><title>Federal Reserve Board - FOMC stateme
 </body></html>
 """
 
+# The statement text, exactly as parse_statement must return it.
 STATEMENTS: dict[str, list[str]] = {
     "20230322": [
         "Recent indicators point to modest growth in spending and production. Job gains have "
@@ -61,8 +62,6 @@ STATEMENTS: dict[str, list[str]] = {
         "to 2 percent over time. In addition, the Committee will continue reducing its holdings "
         "of Treasury securities and agency debt and agency mortgage-backed securities, as "
         "described in its previously announced plans.",
-        "Voting for the monetary policy action were Jerome H. Powell, Chair; John C. Williams, "
-        "Vice Chair; and the other members of the Committee.",
     ],
     "20231213": [
         "Recent indicators suggest that growth of economic activity has slowed from its strong "
@@ -93,6 +92,33 @@ STATEMENTS: dict[str, list[str]] = {
 }
 
 
+# Vote material the parser drops, in both page formats: before 2026-06 a "Voting for"
+# paragraph closes the statement (dissents inside it); from 2026-06 an approval line
+# opens it and a "Voting against" paragraph closes it only when someone dissents.
+OPENERS: dict[str, list[str]] = {
+    "20240918": [
+        "The Federal Open Market Committee approved the following statement for release by "
+        "a 11 \u2013 1 vote:"
+    ],
+}
+VOTES: dict[str, list[str]] = {
+    "20230322": [
+        "Voting for the monetary policy action were Jerome H. Powell, Chair; John C. Williams, "
+        "Vice Chair; and the other members of the Committee."
+    ],
+    "20231213": [
+        "Voting for the monetary policy action were Jerome H. Powell, Chair; John C. Williams, "
+        "Vice Chair; and the other members of the Committee. Voting against this action was "
+        "Esther L. George, who preferred at this meeting to raise the target range."
+    ],
+    "20240918": [
+        "Voting against the monetary policy action was Michelle W. Bowman, who preferred to "
+        "lower the target range for the federal funds rate by 1/4 percentage point at this "
+        "meeting."
+    ],
+}
+
+
 def _long_date(stamp: str) -> str:
     return date(int(stamp[:4]), int(stamp[4:6]), int(stamp[6:])).strftime("%B %d, %Y")
 
@@ -108,8 +134,9 @@ def write_raw_corpus(raw_dir: Path, statements: dict[str, list[str]] = STATEMENT
     files = {}
     for stamp, paragraphs in sorted(statements.items()):
         name = f"monetary{stamp}a.htm"
+        page = OPENERS.get(stamp, []) + paragraphs + VOTES.get(stamp, [])
         body = PAGE.format(
-            paragraphs="\n".join(f"      <p>{p}</p>" for p in paragraphs),
+            paragraphs="\n".join(f"      <p>{p}</p>" for p in page),
             stamp=stamp,
             pretty=_pretty(stamp),
             long_date=_long_date(stamp),

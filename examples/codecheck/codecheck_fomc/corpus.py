@@ -25,7 +25,7 @@ from ledgerworks.verify import Finding, Severity
 
 from codecheck_fomc import DATA_RAW, PIPELINE, PIPELINE_REPO, PIPELINE_VERSION
 
-PARSER_VERSION = "2"
+PARSER_VERSION = "3"
 
 # Paragraphs that are page furniture, not statement text.
 _BOILERPLATE = re.compile(
@@ -37,6 +37,16 @@ _BOILERPLATE = re.compile(
 _DATE_ONLY = re.compile(
     r"^(January|February|March|April|May|June|July|August|September|October|November|December)"
     r" \d{1,2}, \d{4}$"
+)
+# Who voted how, not what the Committee said. Before 2026-06 a "Voting for ..." paragraph
+# closes the statement, with dissents ("Voting against this action was X, who preferred
+# ...") inside it; from 2026-06 an approval line opens it and a "Voting against ..."
+# paragraph closes it when someone dissents.
+_VOTE = re.compile(
+    r"^Voting (for|against) (this|the) (monetary policy )?action"
+    r"|^The Federal Open Market Committee approved the following statement for release"
+    r" by a \d+ ?[\u2013\u2014-] ?\d+ vote:?$"
+    r"|^[A-Z][a-z]+(?: [A-Z]\.)? [A-Z][a-z]+,? (who (preferred|supported)|dissent(ed|ing))\b"
 )
 _WS = re.compile(r"\s+")
 
@@ -94,14 +104,19 @@ def parse_statement(html: str) -> list[str]:
 
     Paragraphs inside ``<div id="article">`` when the page has one (every
     federalreserve.gov press release does), else every paragraph on the page.
-    Dropped: page furniture, the release-date line and sidebar panels such as
-    "Related Information".
+    Dropped: page furniture, the release-date line, sidebar panels such as
+    "Related Information", and vote paragraphs (who voted for or against, the
+    2026-format approval line).
     """
     parser = _Article()
     parser.feed(html)
     inside = [t for in_article, t in parser.paragraphs if in_article]
     paragraphs = inside or [t for _, t in parser.paragraphs]
-    return [p for p in paragraphs if not (_BOILERPLATE.match(p) or _DATE_ONLY.match(p))]
+    return [
+        p
+        for p in paragraphs
+        if not (_BOILERPLATE.match(p) or _DATE_ONLY.match(p) or _VOTE.match(p))
+    ]
 
 
 @dataclass(frozen=True)

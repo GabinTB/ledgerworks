@@ -17,7 +17,7 @@ from codecheck_fomc.compare import compare, freeze
 from codecheck_fomc.corpus import IngestJob, Manifest, parse_statement
 from codecheck_fomc.embed import EmbedJob
 from codecheck_fomc.score import ScoreJob, Taxonomy
-from tests.conftest import STATEMENTS
+from tests.conftest import OPENERS, STATEMENTS, VOTES
 
 TAXONOMY = Path(__file__).resolve().parent.parent / "taxonomy" / "monetary_policy.yaml"
 
@@ -55,7 +55,34 @@ class TestParsing:
         assert "Related Information" in html
         paragraphs = parse_statement(html)
         assert not any("Plans for Reducing" in p for p in paragraphs)
-        assert paragraphs[-1].startswith("Voting for the monetary policy action")
+        assert paragraphs[-1] == STATEMENTS["20230322"][-1]
+
+    @pytest.mark.parametrize("stamp", ["20230322", "20231213", "20240918"])
+    def test_vote_paragraphs_are_dropped_in_both_formats(self, raw_dir, stamp):
+        html = (raw_dir / "html" / f"monetary{stamp}a.htm").read_text()
+        for vote in OPENERS.get(stamp, []) + VOTES[stamp]:
+            assert vote in html
+        assert parse_statement(html) == STATEMENTS[stamp]
+
+    @pytest.mark.parametrize(
+        "vote",
+        [
+            "The Federal Open Market Committee approved the following statement for release "
+            "by a 12 - 0 vote:",
+            "Voting against this action were Stephen I. Miran, who preferred to lower the "
+            "target range; and Jeffrey R. Schmid, who preferred no change.",
+            "Jeffrey R. Schmid dissented, preferring no change to the target range.",
+            "Christopher J. Waller, who supported no change for the federal funds target range "
+            "but preferred to continue the current pace of decline in securities holdings.",
+        ],
+    )
+    def test_vote_and_dissent_phrasings_are_dropped(self, vote):
+        text = "The Committee decided to maintain the target range for the federal funds rate."
+        assert parse_statement(f"<p>{text}</p><p>{vote}</p>") == [text]
+
+    def test_statement_text_about_preferences_is_kept(self):
+        text = "Households preferred to save, and the Committee approved the following plans."
+        assert parse_statement(f"<p>{text}</p>") == [text]
 
     def test_page_without_article_div_falls_back_to_all_paragraphs(self):
         assert parse_statement("<html><body><p>one</p><p>Share</p><p>two</p></body></html>") == [
@@ -81,10 +108,10 @@ class TestPipeline:
             assert sorted(p.name for p in statements.files()) == ["2023.parquet", "2024.parquet"]
             docs = pl.read_parquet(statements.path / "2023.parquet")
             assert docs["doc_id"].to_list() == ["monetary20230322a", "monetary20231213a"]
-            assert docs["n_paragraphs"].to_list() == [4, 2]
+            assert docs["n_paragraphs"].to_list() == [3, 2]
 
             paras = pl.read_parquet(embeddings.path / "2023.parquet")
-            assert paras.height == 6
+            assert paras.height == 5
             assert embeddings.meta.sources == [statements.artifact_id]
             assert embeddings.meta.model_card.backend == "hashing"
             assert embeddings.meta.hyperparams["backend"] == "hashing"
