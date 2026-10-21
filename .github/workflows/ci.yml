@@ -56,6 +56,8 @@ jobs:
       - run: uv sync --group dev
       - run: uv run ruff check . && uv run ruff format --check .
       - run: uv run pytest -q
+      # check A: the committed scores follow from the committed embeddings (no model)
+      - run: uv run codecheck-fomc rescore --no-model
 
   example-model:
     # The sentence-transformers backend on a tiny local model. macOS: PyPI ships
