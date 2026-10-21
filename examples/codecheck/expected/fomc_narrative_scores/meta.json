@@ -1,9 +1,9 @@
 {
   "schema_version": 2,
-  "artifact_id": "fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.2.0__paramsfd478237__20261021T0808",
+  "artifact_id": "fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.3.0__paramsfd478237__20261021T0823",
   "kind": "fomc_narrative_scores",
   "pipeline": "ledgerworks-codecheck-fomc",
-  "pipeline_version": "v0.2.0",
+  "pipeline_version": "v0.3.0",
   "pipeline_repo": "https://github.com/GabinTB/ledgerworks",
   "hyperparams": {
     "partition_freq": "Y",
@@ -15,7 +15,7 @@
     "narrative_vector": "mean of description and seeds"
   },
   "sources": [
-    "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.2.0__params030c4bc3__20261021T0808"
+    "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.3.0__params030c4bc3__20261021T0823"
   ],
   "model_card": {
     "model_id": "BatuhanECB/FinModernBERT-embed-large-v1",
@@ -46,10 +46,10 @@
   "verifier": "fomc_narrative_scores",
   "runs": [
     {
-      "run_start": "2026-10-21T08:08:17+00:00",
-      "pipeline_version": "v0.2.0",
-      "pipeline_commit": "33e8c698fc40dbbfb05d3572ce1322e6ebeb9f3b",
-      "run_end": "2026-10-21T08:08:18+00:00",
+      "run_start": "2026-10-21T08:23:13+00:00",
+      "pipeline_version": "v0.3.0",
+      "pipeline_commit": "2d00ddde5108299a1a9a4487746379921e587674",
+      "run_end": "2026-10-21T08:23:14+00:00",
       "partial": false,
       "produced": [
         "2021.parquet",
@@ -82,49 +82,49 @@
   "deprecated": false,
   "deprecation_reason": null,
   "notes": "",
-  "created": "2026-10-21T08:08:17+00:00",
+  "created": "2026-10-21T08:23:13+00:00",
   "group": null,
   "relink": null,
   "id_minute": true,
   "partial": false,
-  "run_start": "2026-10-21T08:08:17+00:00",
-  "run_end": "2026-10-21T08:08:18+00:00",
-  "pipeline_commit": "33e8c698fc40dbbfb05d3572ce1322e6ebeb9f3b",
+  "run_start": "2026-10-21T08:23:13+00:00",
+  "run_end": "2026-10-21T08:23:14+00:00",
+  "pipeline_commit": "2d00ddde5108299a1a9a4487746379921e587674",
   "files": {
     "2021.parquet": {
       "algorithm": "blake2b",
-      "digest": "79466b44844a35608934efa87f10d73d9062a3b0e4f5ba8d733293f79ed37f1d",
-      "size_bytes": 4577
+      "digest": "62767a22171d011fa1f27b8634f6b339ba85de928c42d4c3adf14a0fbc6a9ca9",
+      "size_bytes": 4096
     },
     "2022.parquet": {
       "algorithm": "blake2b",
-      "digest": "9ac5cc3bafe360ddbc53af48d655e1d2689db5cbab2a4518a583d80a4f040dee",
-      "size_bytes": 4577
+      "digest": "aa5b1afcb25c2dba0c85e7acc469edc84f30ea07de146ce4e3569dd4211a98c4",
+      "size_bytes": 4096
     },
     "2023.parquet": {
       "algorithm": "blake2b",
-      "digest": "5ae939ef8a3ce186bfd66081d0a3c967f44d24d084e90cdb059b5479af758bbc",
-      "size_bytes": 4578
+      "digest": "e9710b025cd7d328fddd56e449b6f1501a9ab0433edae5f34724a18edb2c07c0",
+      "size_bytes": 4096
     },
     "2024.parquet": {
       "algorithm": "blake2b",
-      "digest": "7a1a32db433b96b7903065eb5892c8e9118f6c724308da104e6cd7768e947481",
-      "size_bytes": 4578
+      "digest": "1646b76d6ebfc0f061d390ecbd24ba41096f5a0f12a926ef32fc9af6f4774980",
+      "size_bytes": 4096
     },
     "2025.parquet": {
       "algorithm": "blake2b",
-      "digest": "604d503a0840b601e2e1bc84ff2d1cf95f0d3cc42bf2f985fff5e194ac7cc046",
-      "size_bytes": 4577
+      "digest": "8674b390aea536d0bc660f2c0230896e85d0f6743fa06f7ada777469dc616212",
+      "size_bytes": 4096
     },
     "2026.parquet": {
       "algorithm": "blake2b",
-      "digest": "903b04133b125f0f06e7442ea1b17b186b87f4d1e255666e0890b03679d5c6cf",
-      "size_bytes": 4456
+      "digest": "ecaf0eec6d3fe991ac6cf90a3ff3932fe9baf676993de9272929ea18df559477",
+      "size_bytes": 3988
     },
     "narratives.parquet": {
       "algorithm": "blake2b",
-      "digest": "2d7e1a0b3b98fac33edf785234d35a63a1f0a1f45615e51cd90557331aa65434",
-      "size_bytes": 319698
+      "digest": "368ab9123795155877e8f3bd9234166b60d6a8414a9d9d2887f0431874f7f00f",
+      "size_bytes": 39847
     }
   }
 }

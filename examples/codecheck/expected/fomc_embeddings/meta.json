@@ -1,9 +1,9 @@
 {
   "schema_version": 2,
-  "artifact_id": "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.2.0__params030c4bc3__20261021T0808",
+  "artifact_id": "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.3.0__params030c4bc3__20261021T0823",
   "kind": "fomc_embeddings",
   "pipeline": "ledgerworks-codecheck-fomc",
-  "pipeline_version": "v0.2.0",
+  "pipeline_version": "v0.3.0",
   "pipeline_repo": "https://github.com/GabinTB/ledgerworks",
   "hyperparams": {
     "partition_freq": "Y",
@@ -16,7 +16,7 @@
     "unit": "paragraph"
   },
   "sources": [
-    "fomc_statements__v0.2.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261021T0808"
+    "fomc_statements__v0.3.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261021T0823"
   ],
   "model_card": {
     "model_id": "BatuhanECB/FinModernBERT-embed-large-v1",
@@ -47,10 +47,10 @@
   "verifier": "fomc_embeddings",
   "runs": [
     {
-      "run_start": "2026-10-21T08:08:06+00:00",
-      "pipeline_version": "v0.2.0",
-      "pipeline_commit": "33e8c698fc40dbbfb05d3572ce1322e6ebeb9f3b",
-      "run_end": "2026-10-21T08:08:16+00:00",
+      "run_start": "2026-10-21T08:23:05+00:00",
+      "pipeline_version": "v0.3.0",
+      "pipeline_commit": "2d00ddde5108299a1a9a4487746379921e587674",
+      "run_end": "2026-10-21T08:23:12+00:00",
       "partial": false,
       "produced": [
         "2021.parquet",
@@ -82,44 +82,44 @@
   "deprecated": false,
   "deprecation_reason": null,
   "notes": "",
-  "created": "2026-10-21T08:08:06+00:00",
+  "created": "2026-10-21T08:23:05+00:00",
   "group": null,
   "relink": null,
   "id_minute": true,
   "partial": false,
-  "run_start": "2026-10-21T08:08:06+00:00",
-  "run_end": "2026-10-21T08:08:16+00:00",
-  "pipeline_commit": "33e8c698fc40dbbfb05d3572ce1322e6ebeb9f3b",
+  "run_start": "2026-10-21T08:23:05+00:00",
+  "run_end": "2026-10-21T08:23:12+00:00",
+  "pipeline_commit": "2d00ddde5108299a1a9a4487746379921e587674",
   "files": {
     "2021.parquet": {
       "algorithm": "blake2b",
-      "digest": "d13431f4edaf46be40cac1597794d7f1ee7e6e09b435c22ec9224b89b20e4a1d",
-      "size_bytes": 396441
+      "digest": "e20976984703a79c6904291ebb5720e2f42a05f86c45a818a15e2d6e3304c29c",
+      "size_bytes": 90825
     },
     "2022.parquet": {
       "algorithm": "blake2b",
-      "digest": "b2c019406dee7ca138f8b271187ddd04c5f07e6ce84d2217174775d3295617f8",
-      "size_bytes": 394133
+      "digest": "c309918b9461630356fd54beb4f273210a91af3dd774cae08a59a31fb090844e",
+      "size_bytes": 94225
     },
     "2023.parquet": {
       "algorithm": "blake2b",
-      "digest": "32ee4360603ecee081593964addcc589e7da8b774eced914cda459def5b90aaf",
-      "size_bytes": 388148
+      "digest": "1caf055bdfd776a0ea0475917ed0725b5b6ec270d7fba69386ab13a7b07442af",
+      "size_bytes": 85984
     },
     "2024.parquet": {
       "algorithm": "blake2b",
-      "digest": "6debd810be4dac02fd257dc7700ca75eb0e75b9b961386fe1585ea09621e4c85",
-      "size_bytes": 380415
+      "digest": "0f99a3ed2e02ca92f6af218784a0369e28d513a79d2ab0bbb37a72c47e051e3c",
+      "size_bytes": 89665
     },
     "2025.parquet": {
       "algorithm": "blake2b",
-      "digest": "4ac3cd670d732f5bdf7ffd7bc50c48aeea43430167fd2243e02ae5ce1f85b582",
-      "size_bytes": 389279
+      "digest": "c8d1e0d9dff84bc73f2a28f3f72064d4d1e0298b23bbe4cbf26edc613f0431b1",
+      "size_bytes": 89900
     },
     "2026.parquet": {
       "algorithm": "blake2b",
-      "digest": "d03a009e7241c43bb9755a26dd1f5612485f786ebd8807c2526b8bdf6ca9f830",
-      "size_bytes": 355772
+      "digest": "306c6ee975ce0eacabe51e0deaee5c32194a4c470a8398c7d99961a144de400b",
+      "size_bytes": 70197
     }
   }
 }

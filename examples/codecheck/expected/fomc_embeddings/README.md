@@ -1,10 +1,10 @@
-# fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.2.0__params030c4bc3__20261021T0808
+# fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.3.0__params030c4bc3__20261021T0823
 
 - **Kind**: `fomc_embeddings`
-- **Pipeline**: `ledgerworks-codecheck-fomc` version `v0.2.0`
+- **Pipeline**: `ledgerworks-codecheck-fomc` version `v0.3.0`
 - **Repo**: https://github.com/GabinTB/ledgerworks
 - **Verifier**: `fomc_embeddings`
-- **Created**: 2026-10-21T08:08:06+00:00
+- **Created**: 2026-10-21T08:23:05+00:00
 - **Executions**: 1
 
 ## Hyperparameters
@@ -22,7 +22,7 @@
 
 | # | Started | Finished | Commit | Version | Outputs | State |
 | --: | --- | --- | --- | --- | --: | --- |
-| 1 | 2026-10-21T08:08:06+00:00 | 2026-10-21T08:08:16+00:00 | `33e8c698fc...` | v0.2.0 | 6 | complete |
+| 1 | 2026-10-21T08:23:05+00:00 | 2026-10-21T08:23:12+00:00 | `2d00ddde51...` | v0.3.0 | 6 | complete |
 
 ## Environment
 
@@ -62,20 +62,20 @@
 
 ## Inputs
 
-- `fomc_statements__v0.2.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261021T0808`
+- `fomc_statements__v0.3.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261021T0823`
 
 ## Files
 
-6 files, 2.2 MB total. Digests are `blake2b`.
+6 files, 508.6 KB total. Digests are `blake2b`.
 
 | File | Size | Digest |
 | --- | ---: | --- |
-| `2021.parquet` | 387.1 KB | `d13431f4edaf46be...` |
-| `2022.parquet` | 384.9 KB | `b2c019406dee7ca1...` |
-| `2023.parquet` | 379.1 KB | `32ee4360603ecee0...` |
-| `2024.parquet` | 371.5 KB | `6debd810be4dac02...` |
-| `2025.parquet` | 380.2 KB | `4ac3cd670d732f5b...` |
-| `2026.parquet` | 347.4 KB | `d03a009e7241c43b...` |
+| `2021.parquet` | 88.7 KB | `e20976984703a79c...` |
+| `2022.parquet` | 92.0 KB | `c309918b94616303...` |
+| `2023.parquet` | 84.0 KB | `1caf055bdfd776a0...` |
+| `2024.parquet` | 87.6 KB | `0f99a3ed2e02ca92...` |
+| `2025.parquet` | 87.8 KB | `c8d1e0d9dff84bc7...` |
+| `2026.parquet` | 68.6 KB | `306c6ee975ce0eac...` |
 
 ---
 
