@@ -1,10 +1,10 @@
-# fomc_statements__v0.1.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261014T1256
+# fomc_statements__v0.2.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261021T0808
 
 - **Kind**: `fomc_statements`
-- **Pipeline**: `ledgerworks-codecheck-fomc` version `v0.1.0`
+- **Pipeline**: `ledgerworks-codecheck-fomc` version `v0.2.0`
 - **Repo**: https://github.com/GabinTB/ledgerworks
 - **Verifier**: `fomc_statements`
-- **Created**: 2026-10-14T12:56:21+00:00
+- **Created**: 2026-10-21T08:08:03+00:00
 - **Executions**: 1
 
 ## Hyperparameters
@@ -20,7 +20,7 @@
 
 | # | Started | Finished | Commit | Version | Outputs | State |
 | --: | --- | --- | --- | --- | --: | --- |
-| 1 | 2026-10-14T12:56:21+00:00 | 2026-10-14T12:56:21+00:00 | `f6ad28a5a8...` | v0.1.0 | 6 | complete |
+| 1 | 2026-10-21T08:08:03+00:00 | 2026-10-21T08:08:03+00:00 | `33e8c698fc...` | v0.2.0 | 6 | complete |
 
 ## Environment
 

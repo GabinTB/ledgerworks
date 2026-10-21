@@ -1,10 +1,10 @@
-# fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__paramsfd478237__20261014T1256
+# fomc_narrative_scores__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.2.0__paramsfd478237__20261021T0808
 
 - **Kind**: `fomc_narrative_scores`
-- **Pipeline**: `ledgerworks-codecheck-fomc` version `v0.1.0`
+- **Pipeline**: `ledgerworks-codecheck-fomc` version `v0.2.0`
 - **Repo**: https://github.com/GabinTB/ledgerworks
 - **Verifier**: `fomc_narrative_scores`
-- **Created**: 2026-10-14T12:56:34+00:00
+- **Created**: 2026-10-21T08:08:17+00:00
 - **Executions**: 1
 
 ## Hyperparameters
@@ -21,7 +21,7 @@
 
 | # | Started | Finished | Commit | Version | Outputs | State |
 | --: | --- | --- | --- | --- | --: | --- |
-| 1 | 2026-10-14T12:56:34+00:00 | 2026-10-14T12:56:35+00:00 | `f6ad28a5a8...` | v0.1.0 | 7 | complete |
+| 1 | 2026-10-21T08:08:17+00:00 | 2026-10-21T08:08:18+00:00 | `33e8c698fc...` | v0.2.0 | 7 | complete |
 
 ## Environment
 
@@ -61,21 +61,21 @@
 
 ## Inputs
 
-- `fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.1.0__params030c4bc3__20261014T1256`
+- `fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.2.0__params030c4bc3__20261021T0808`
 
 ## Files
 
-7 files, 57.8 KB total. Digests are `blake2b`.
+7 files, 338.9 KB total. Digests are `blake2b`.
 
 | File | Size | Digest |
 | --- | ---: | --- |
-| `2021.parquet` | 3.3 KB | `78755dcc5b3f4ce4...` |
-| `2022.parquet` | 3.3 KB | `6b5cc8dac6a06a8b...` |
-| `2023.parquet` | 3.3 KB | `dc9a7fe01e62a268...` |
-| `2024.parquet` | 3.3 KB | `b72e613dff84a0bb...` |
-| `2025.parquet` | 3.3 KB | `53cfcb2db7603983...` |
-| `2026.parquet` | 3.0 KB | `24ff7f02e16a92db...` |
-| `narratives.parquet` | 38.3 KB | `24237df8ba6bcd9d...` |
+| `2021.parquet` | 4.5 KB | `79466b44844a3560...` |
+| `2022.parquet` | 4.5 KB | `9ac5cc3bafe360dd...` |
+| `2023.parquet` | 4.5 KB | `5ae939ef8a3ce186...` |
+| `2024.parquet` | 4.5 KB | `7a1a32db433b96b7...` |
+| `2025.parquet` | 4.5 KB | `604d503a0840b601...` |
+| `2026.parquet` | 4.4 KB | `903b04133b125f0f...` |
+| `narratives.parquet` | 312.2 KB | `2d7e1a0b3b98fac3...` |
 
 ---
 
