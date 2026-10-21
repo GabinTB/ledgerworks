@@ -207,6 +207,19 @@ class TestPipeline:
             report = compare(ledger, tmp_path / "expected")
         assert not report.passed and not report.no_reference
 
+    def test_compare_refuses_a_reference_from_another_pipeline_version(self, raw_dir, tmp_path):
+        # regression: an older reference layout crashed compare on a missing column
+        with Ledger(tmp_path / "ledger") as ledger:
+            run_all(ledger, raw_dir)
+            freeze(ledger, tmp_path / "expected")
+            meta_path = tmp_path / "expected" / "fomc_embeddings" / "meta.json"
+            meta = json.loads(meta_path.read_text())
+            meta["pipeline_version"] = "v0.0.1"
+            meta_path.write_text(json.dumps(meta))
+            report = compare(ledger, tmp_path / "expected")
+        assert not report.passed
+        assert "reference written by pipeline v0.0.1" in str(report)
+
     def test_cli_records_this_package_lockfile(self, tmp_path):
         # regression: repo_dir was the git root, so env recorded the root uv.lock
         lock = Path(__file__).resolve().parent.parent / "uv.lock"

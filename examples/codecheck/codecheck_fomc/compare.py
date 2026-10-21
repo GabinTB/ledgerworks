@@ -104,6 +104,12 @@ def compare(
             f"        reference {exp_meta.artifact_id} (commit {exp_meta.pipeline_commit})\n"
             f"        {CHECKS[kind]}"
         )
+        if exp_meta.pipeline_version != art.meta.pipeline_version:
+            report.fail(
+                f"{kind}: reference written by pipeline {exp_meta.pipeline_version}, this run "
+                f"by {art.meta.pipeline_version}: the table layouts differ, rebuild the reference"
+            )
+            continue
         got, exp = _files(art.path), _files(exp_dir)
         if set(got) != set(exp):
             report.fail(
