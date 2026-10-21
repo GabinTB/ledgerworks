@@ -7,6 +7,12 @@
     codecheck-fomc verify                                 ledgerworks verify on the ledger
     codecheck-fomc compare    [--atol 1e-4] [--min-cos 0.9999]
     codecheck-fomc freeze                                 copy the latest run into expected/
+    codecheck-fomc rescore    --no-model                  scores from the committed embeddings
+                                                          and narrative vectors (numpy only)
+    codecheck-fomc rescore                                score the committed embeddings with
+                                                          the model (re-embeds the narratives)
+    codecheck-fomc explain    [KIND] [--reference]        everything recorded about the latest
+                                                          artifacts (or the committed ones)
 
 The ledger (artifact tree + index) lives in ./ledger by default (``--ledger``).
 """
@@ -18,14 +24,16 @@ import logging
 import sys
 from pathlib import Path
 
-from ledgerworks import Ledger, verify
+from ledgerworks import Ledger, LedgerError, read_meta, verify
 from ledgerworks.jobs import JobRunner
 
 from codecheck_fomc import DEFAULT_LEDGER, EXPECTED_DIR, HERE, TAXONOMY_DIR
 from codecheck_fomc.backends import make_backend
+from codecheck_fomc.compare import KINDS as KIND_NAMES
 from codecheck_fomc.compare import compare, freeze
 from codecheck_fomc.corpus import IngestJob
 from codecheck_fomc.embed import EmbedJob
+from codecheck_fomc.explain import explain, summary
 from codecheck_fomc.score import ScoreJob, Taxonomy
 
 
@@ -47,13 +55,13 @@ def _backend(args: argparse.Namespace):
 
 def cmd_ingest(ledger: Ledger, args: argparse.Namespace) -> None:
     art = _runner(ledger, args).start(IngestJob())
-    print(f"fomc_statements          {art.artifact_id}")
+    print(summary(art))
 
 
 def cmd_embed(ledger: Ledger, args: argparse.Namespace) -> None:
     source = ledger.latest("fomc_statements")
     art = _runner(ledger, args).start(EmbedJob(source, _backend(args)))
-    print(f"fomc_embeddings          {art.artifact_id}")
+    print(summary(art))
 
 
 def cmd_score(ledger: Ledger, args: argparse.Namespace) -> None:
@@ -61,7 +69,7 @@ def cmd_score(ledger: Ledger, args: argparse.Namespace) -> None:
     taxonomy = Taxonomy.load(TAXONOMY_DIR / f"{args.taxonomy}.yaml")
     backend = EmbedJob.from_artifact(source, ledger).backend  # the model the vectors came from
     art = _runner(ledger, args).start(ScoreJob(source, taxonomy, backend))
-    print(f"fomc_narrative_scores    {art.artifact_id}")
+    print(summary(art))
 
 
 def cmd_verify(ledger: Ledger, args: argparse.Namespace) -> int:
@@ -78,6 +86,82 @@ def cmd_compare(ledger: Ledger, args: argparse.Namespace) -> int:
     else:
         print("\nREPRODUCED" if report.passed else "\nNOT REPRODUCED")
     return 0 if report.passed else 1
+
+
+def _shown(path: Path) -> str:
+    """A path relative to the working directory when it is inside it."""
+    try:
+        return str(path.resolve().relative_to(Path.cwd()))
+    except ValueError:
+        return str(path)
+
+
+def cmd_rescore_without_model(args: argparse.Namespace) -> int:
+    from codecheck_fomc.reference import rescore_without_model
+
+    print(
+        "Recomputing the narrative scores from the committed embeddings and narrative vectors\n"
+        f"in {_shown(args.expected)} (numpy only, no model), then comparing them with the\n"
+        "committed scores.\n"
+    )
+    report = rescore_without_model(args.expected, show_year=f"{args.year}.parquet")
+    print(report)
+    print(
+        "\nREPRODUCED: the committed scores follow from the committed embeddings"
+        if report.passed
+        else "\nNOT REPRODUCED"
+    )
+    return 0 if report.passed else 1
+
+
+def cmd_rescore(ledger: Ledger, args: argparse.Namespace) -> int:
+    from codecheck_fomc.reference import describe, register_reference
+
+    print(
+        "Scoring the committed embeddings with the model: the 10 narratives are embedded\n"
+        "again, the paragraph vectors are the author's. Inputs from "
+        f"{_shown(args.expected)}, checked against their meta.json:\n"
+    )
+    refs = register_reference(ledger, args.expected, ["fomc_statements", "fomc_embeddings"])
+    for ref in refs:
+        print(describe(ref))
+    source = ledger.get(refs[-1].artifact.artifact_id)
+    taxonomy = Taxonomy.load(TAXONOMY_DIR / f"{args.taxonomy}.yaml")
+    committed = args.expected / "fomc_narrative_scores" / "meta.json"
+    if committed.exists():
+        recorded = read_meta(committed.parent)[0].hyperparams.get("taxonomy_sha256")
+        if recorded != taxonomy.sha256:
+            print(f"\nWARNING: {taxonomy.path.name} differs from the one the reference used")
+    backend = EmbedJob.from_artifact(source, ledger).backend
+    art = _runner(ledger, args).start(ScoreJob(source, taxonomy, backend))
+    print("\n" + summary(art) + "\n        (its input is the committed embeddings)\n")
+    report = compare(
+        ledger, args.expected, atol=args.atol, min_cos=args.min_cos, kinds=(ScoreJob.kind,)
+    )
+    print(report)
+    print("\nREPRODUCED" if report.passed else "\nNOT REPRODUCED")
+    return 0 if report.passed else 1
+
+
+def cmd_explain(args: argparse.Namespace) -> int:
+    from codecheck_fomc.compare import KINDS
+    from codecheck_fomc.reference import load_reference
+
+    kinds = [args.kind] if args.kind else list(KINDS)
+    blocks = []
+    if args.reference:
+        for kind in kinds:
+            ref = load_reference(args.expected, kind)
+            blocks.append(explain(ref.artifact, " (committed reference, expected/)"))
+    else:
+        with Ledger(args.ledger) as ledger:
+            for kind in kinds:
+                try:
+                    blocks.append(explain(ledger.latest(kind), " (latest in the ledger)"))
+                except LedgerError:
+                    blocks.append(f"== {kind}: nothing in {args.ledger} yet")
+    print("\n\n".join(blocks))
+    return 0
 
 
 def cmd_freeze(ledger: Ledger, args: argparse.Namespace) -> None:
@@ -106,6 +190,16 @@ def build_parser() -> argparse.ArgumentParser:
     sub = ap.add_subparsers(dest="command", required=True)
     for name in ("all", "ingest", "embed", "score", "verify", "compare", "freeze"):
         sub.add_parser(name)
+    rescore = sub.add_parser("rescore", help="score the committed embeddings (see docs)")
+    rescore.add_argument(
+        "--no-model", action="store_true", help="reuse the committed narrative vectors"
+    )
+    rescore.add_argument("--year", default="2026", help="year whose table is printed")
+    show = sub.add_parser("explain", help="everything recorded about the artifacts")
+    show.add_argument("kind", nargs="?", choices=[*KIND_NAMES], help="one kind (default: all)")
+    show.add_argument(
+        "--reference", action="store_true", help="the committed artifacts in expected/"
+    )
     return ap
 
 
@@ -115,6 +209,20 @@ def main(argv: list[str] | None = None) -> int:
         level=logging.INFO if args.verbose else logging.WARNING,
         format="%(levelname)s %(name)s %(message)s",
     )
+    try:
+        return _run(args)
+    except (LedgerError, ValueError) as exc:  # refusals the reviewer should read, not a trace
+        if args.verbose:
+            raise
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+
+def _run(args: argparse.Namespace) -> int:
+    if args.command == "explain":
+        return cmd_explain(args)  # reads only: opens the ledger itself
+    if args.command == "rescore" and args.no_model:
+        return cmd_rescore_without_model(args)  # reads expected/ only: no ledger
     with Ledger(args.ledger) as ledger:
         if args.command == "all":
             cmd_ingest(ledger, args)
@@ -134,6 +242,8 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_compare(ledger, args)
         elif args.command == "freeze":
             cmd_freeze(ledger, args)
+        elif args.command == "rescore":
+            return cmd_rescore(ledger, args)
     return 0
 
 

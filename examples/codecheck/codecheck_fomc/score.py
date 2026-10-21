@@ -1,16 +1,16 @@
-"""fomc_narrative_scores: cosine scores of every statement against every narrative.
+"""fomc_narrative_scores: how close every statement is to every narrative.
 
 The taxonomy (``taxonomy/*.yaml``) gives each narrative a description and seed
 phrases. They are embedded with the backend recorded on the embeddings artifact
 (same model, same revision), averaged into one unit vector per narrative, and
-written to ``narratives.parquet``. Then, per statement and narrative:
+written to ``narratives.parquet`` (one row per narrative, ``e0000``... columns).
 
-    cos_doc         cosine between the narrative and the mean of the statement's
-                    paragraph vectors (re-normalised)
-    cos_para_mean   mean over paragraphs of the paragraph/narrative cosine
-    cos_para_max    the best paragraph
+Scores, one parquet per year, one row per statement date, one column per narrative:
 
-These are the raw scores; calibration or z-scoring is downstream work.
+    score[date, narrative] = mean over the statement's paragraphs p of cos(p, narrative)
+
+Paragraph and narrative vectors are unit norm, so each cosine is a dot product.
+These are raw scores; calibration or z-scoring is downstream work.
 """
 
 from __future__ import annotations
@@ -31,15 +31,19 @@ from ledgerworks.verify import Finding, Severity
 from codecheck_fomc import PIPELINE, PIPELINE_REPO, PIPELINE_VERSION, TAXONOMY_DIR
 from codecheck_fomc.backends import Backend, normalise
 from codecheck_fomc.embed import backend_from_params
+from codecheck_fomc.tables import vector_frame, vectors_of, write_table
 
-SCHEMA = {
-    "doc_id": pl.String,
-    "date": pl.Date,
-    "narrative_id": pl.String,
-    "cos_doc": pl.Float32,
-    "cos_para_mean": pl.Float32,
-    "cos_para_max": pl.Float32,
-}
+NARRATIVES_FILE = "narratives.parquet"
+DESCRIPTION = (
+    "fomc_narrative_scores: one row per FOMC statement (date, doc_id), one column per "
+    "narrative of the taxonomy. Each value is the mean, over the statement's paragraphs, "
+    "of the cosine between the paragraph embedding and the narrative vector."
+)
+NARRATIVES_DESCRIPTION = (
+    "Narrative vectors: one row per narrative of the taxonomy (narrative_id, label); "
+    "e0000... are the components of the unit-norm mean of the embeddings of its "
+    "description and seed phrases."
+)
 
 
 @dataclass(frozen=True)
@@ -73,6 +77,52 @@ def narrative_vectors(taxonomy: Taxonomy, backend: Backend) -> tuple[list[str], 
         ids.append(narrative["id"])
         vectors.append(vecs.mean(axis=0))
     return ids, normalise(np.stack(vectors))
+
+
+def narratives_frame(taxonomy: Taxonomy, ids: list[str], vectors: np.ndarray) -> pl.DataFrame:
+    labels = {n["id"]: n.get("label", n["id"]) for n in taxonomy.narratives}
+    keys = pl.DataFrame(
+        {"narrative_id": ids, "label": [labels[i] for i in ids]},
+        schema={"narrative_id": pl.String, "label": pl.String},
+    )
+    return pl.concat([keys, vector_frame(vectors)], how="horizontal")
+
+
+def read_narratives(path: Path) -> tuple[list[str], np.ndarray]:
+    """Narrative ids and their (n, d) vectors from a ``narratives.parquet``."""
+    frame = pl.read_parquet(path)
+    return frame["narrative_id"].to_list(), vectors_of(frame)
+
+
+def score_frame(paragraphs: pl.DataFrame, ids: list[str], nv: np.ndarray) -> pl.DataFrame:
+    """One row per statement (date, doc_id), one Float32 column per narrative.
+
+    ``paragraphs`` is a fomc_embeddings table (``date``, ``doc_id``, ``para_idx``,
+    ``e*``); ``nv`` the (n, d) unit narrative vectors in the order of ``ids``.
+    """
+    paragraphs = paragraphs.sort("date", "doc_id", "para_idx")
+    pv = vectors_of(paragraphs)  # (p, d), unit norm
+    if pv.shape[1] == 0 or pv.shape[1] != nv.shape[1]:
+        raise ValueError(
+            f"paragraph vectors of dim {pv.shape[1]}, narrative vectors of dim {nv.shape[1]}: "
+            "both must be flat e0000... columns (pipeline v0.2.0 or later) of the same model"
+        )
+    sims = pv @ nv.T  # (p, n): cosine of every paragraph with every narrative
+    per_para = pl.concat(
+        [
+            paragraphs.select("date", "doc_id"),
+            pl.DataFrame(
+                {nid: sims[:, j] for j, nid in enumerate(ids)},
+                schema={nid: pl.Float32 for nid in ids},
+            ),
+        ],
+        how="horizontal",
+    )
+    return (
+        per_para.group_by("date", "doc_id", maintain_order=True)
+        .agg(pl.col(ids).mean())
+        .with_columns(pl.col(ids).cast(pl.Float32))
+    )
 
 
 @register_job
@@ -115,41 +165,17 @@ class ScoreJob(Job):
     def _narratives(self, ctx: JobContext) -> tuple[list[str], np.ndarray]:
         if self._vectors is None:
             self._ids, self._vectors = narrative_vectors(self.taxonomy, self.backend)
-            frame = pl.DataFrame(
-                {"narrative_id": self._ids, "vector": [v.tolist() for v in self._vectors]},
-                schema={"narrative_id": pl.String, "vector": pl.List(pl.Float32)},
-            )
-            tmp = ctx.out_dir / "narratives.parquet.tmp"
-            frame.write_parquet(tmp)
-            tmp.replace(ctx.out_dir / "narratives.parquet")
+            frame = narratives_frame(self.taxonomy, self._ids, self._vectors)
+            write_table(frame, ctx.out_dir / NARRATIVES_FILE, NARRATIVES_DESCRIPTION)
         assert self._ids is not None
         return self._ids, self._vectors
 
     def run_unit(self, unit: Unit, ctx: JobContext) -> None:
         ids, nv = self._narratives(ctx)
-        paras = pl.read_parquet(self.source.path / f"{unit.key}.parquet").sort("doc_id", "para_idx")
-        rows: list[dict[str, Any]] = []
-        for (doc_id, date), group in paras.group_by(["doc_id", "date"], maintain_order=True):
-            pv = np.array(group["embedding"].to_list(), dtype=np.float32)  # (p, d)
-            doc = normalise(pv.mean(axis=0, keepdims=True))[0]
-            sims = pv @ nv.T  # (p, n), both unit norm
-            doc_sims = nv @ doc
-            for j, nid in enumerate(ids):
-                rows.append(
-                    {
-                        "doc_id": doc_id,
-                        "date": date,
-                        "narrative_id": nid,
-                        "cos_doc": float(doc_sims[j]),
-                        "cos_para_mean": float(sims[:, j].mean()),
-                        "cos_para_max": float(sims[:, j].max()),
-                    }
-                )
-        out = pl.DataFrame(rows, schema=SCHEMA)
-        tmp = ctx.out_dir / f"{unit.key}.parquet.tmp"
-        out.write_parquet(tmp)
-        tmp.replace(ctx.out_dir / f"{unit.key}.parquet")
-        ctx.log.info("%s: %d scores", unit.key, out.height)
+        paragraphs = pl.read_parquet(self.source.path / f"{unit.key}.parquet")
+        out = score_frame(paragraphs, ids, nv)
+        write_table(out, ctx.out_dir / f"{unit.key}.parquet", DESCRIPTION)
+        ctx.log.info("%s: %d statements x %d narratives", unit.key, out.height, len(ids))
 
     @classmethod
     def from_artifact(cls, artifact: Artifact, index: Ledger, **kwargs: Any) -> ScoreJob:
@@ -163,13 +189,24 @@ class ScoreJob(Job):
 
 def verify_artifact(artifact: Artifact) -> list[Finding]:
     findings: list[Finding] = []
-    if not (artifact.path / "narratives.parquet").exists():
-        findings.append(Finding(Severity.ERROR, artifact.artifact_id, "narratives.parquet missing"))
+    if not (artifact.path / NARRATIVES_FILE).exists():
+        findings.append(Finding(Severity.ERROR, artifact.artifact_id, f"{NARRATIVES_FILE} missing"))
+        return findings
+    ids, _ = read_narratives(artifact.path / NARRATIVES_FILE)
     for path in artifact.files("*.parquet"):
-        if path.name == "narratives.parquet":
+        if path.name == NARRATIVES_FILE:
             continue
         frame = pl.read_parquet(path)
-        for col in ("cos_doc", "cos_para_mean", "cos_para_max"):
+        if frame.columns != ["date", "doc_id", *ids]:
+            findings.append(
+                Finding(
+                    Severity.ERROR,
+                    artifact.artifact_id,
+                    f"{path.name}: columns are not date, doc_id and the {len(ids)} narratives",
+                )
+            )
+            continue
+        for col in ids:
             if frame.height and ((frame[col] < -1.001) | (frame[col] > 1.001)).any():
                 findings.append(
                     Finding(

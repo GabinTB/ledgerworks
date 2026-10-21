@@ -24,7 +24,19 @@ import numpy as np
 import polars as pl
 from ledgerworks import Artifact, Ledger, read_meta
 
+from codecheck_fomc.tables import vectors_of
+
 KINDS = ("fomc_statements", "fomc_embeddings", "fomc_narrative_scores")
+
+# What each table is checked for, printed above its results.
+CHECKS = {
+    "fomc_statements": "check: every row identical (statement text and HTML digest); exact, "
+    "parsing is deterministic",
+    "fomc_embeddings": "check: same paragraphs (text digest), vectors within atol element-wise "
+    "and cosine >= min_cos; float tolerance, the model's sums are reordered across CPUs",
+    "fomc_narrative_scores": "check: same statements and narratives, every score within atol; "
+    "narratives.parquet vectors as for the embeddings",
+}
 
 
 @dataclass
@@ -68,14 +80,15 @@ def compare(
     *,
     atol: float = 1e-4,
     min_cos: float = 0.9999,
+    kinds: tuple[str, ...] = KINDS,
 ) -> Report:
     report = Report()
-    if not any((expected_dir / kind).exists() for kind in KINDS):
+    if not any((expected_dir / kind).exists() for kind in kinds):
         # first run: nothing frozen yet, so nothing to fail against
         report.no_reference = True
         report.lines.append(f"no reference yet in {expected_dir}, run freeze")
         return report
-    for kind in KINDS:
+    for kind in kinds:
         exp_dir = expected_dir / kind
         if not exp_dir.exists():
             report.fail(f"{kind}: no reference in {expected_dir}")
@@ -88,7 +101,8 @@ def compare(
         exp_meta, exp_hashes = read_meta(exp_dir)
         report.lines.append(
             f"{kind}: {art.artifact_id}\n"
-            f"        reference {exp_meta.artifact_id} (commit {exp_meta.pipeline_commit})"
+            f"        reference {exp_meta.artifact_id} (commit {exp_meta.pipeline_commit})\n"
+            f"        {CHECKS[kind]}"
         )
         got, exp = _files(art.path), _files(exp_dir)
         if set(got) != set(exp):
@@ -106,7 +120,7 @@ def compare(
             elif kind == "fomc_embeddings":
                 _compare_embeddings(report, kind, name, a, b, atol, min_cos)
             elif name == "narratives.parquet":
-                _compare_vectors(report, kind, name, a, b, "narrative_id", "vector", atol, min_cos)
+                _compare_vectors(report, kind, name, a, b, "narrative_id", atol, min_cos)
             else:
                 _compare_scores(report, kind, name, a, b, atol)
         exact = [n for n, h in exp_hashes.items() if art.file_hashes.get(n) == h["digest"]]
@@ -124,34 +138,40 @@ def _compare_statements(report, kind, name, a, b) -> None:
         report.fail(f"{kind}/{name}: statement rows differ")
 
 
+def _aligned(a: pl.DataFrame, b: pl.DataFrame, keys: list[str]):
+    """Both frames sorted on ``keys``, or None if their key sets differ."""
+    a, b = a.sort(keys), b.sort(keys)
+    return (a, b) if a.select(keys).equals(b.select(keys)) else None
+
+
 def _compare_embeddings(report, kind, name, a, b, atol, min_cos) -> None:
-    keys = ["doc_id", "para_idx"]
-    joined = a.join(b, on=keys, how="inner", suffix="_ref")
-    if joined.height != a.height:
+    pair = _aligned(a, b, ["doc_id", "para_idx"])
+    if pair is None:
         report.fail(f"{kind}/{name}: paragraph keys differ")
         return
-    if (joined["text_sha256"] != joined["text_sha256_ref"]).any():
+    a, b = pair
+    if not a["text_sha256"].equals(b["text_sha256"]):
         report.fail(f"{kind}/{name}: paragraph text differs from the reference")
         return
-    _vectors_close(report, kind, name, joined, "embedding", "embedding_ref", atol, min_cos)
+    _vectors_close(report, kind, name, vectors_of(a), vectors_of(b), atol, min_cos)
 
 
-def _compare_vectors(report, kind, name, a, b, key, col, atol, min_cos) -> None:
-    joined = a.join(b, on=key, how="inner", suffix="_ref")
-    if joined.height != a.height:
+def _compare_vectors(report, kind, name, a, b, key, atol, min_cos) -> None:
+    pair = _aligned(a, b, [key])
+    if pair is None:
         report.fail(f"{kind}/{name}: {key} sets differ")
         return
-    _vectors_close(report, kind, name, joined, col, f"{col}_ref", atol, min_cos)
+    _vectors_close(report, kind, name, vectors_of(pair[0]), vectors_of(pair[1]), atol, min_cos)
 
 
-def _vectors_close(report, kind, name, joined, col, ref, atol, min_cos) -> None:
-    x = np.array(joined[col].to_list(), dtype=np.float32)
-    y = np.array(joined[ref].to_list(), dtype=np.float32)
+def _vectors_close(report, kind, name, x, y, atol, min_cos) -> None:
     if x.shape != y.shape:
         report.fail(f"{kind}/{name}: vector shape {x.shape} vs {y.shape}")
         return
     max_abs = float(np.abs(x - y).max()) if x.size else 0.0
-    cos = float((x * y).sum(axis=1).min()) if x.size else 1.0
+    x64, y64 = x.astype(np.float64), y.astype(np.float64)  # float64: exact for equal vectors
+    norms = np.linalg.norm(x64, axis=1) * np.linalg.norm(y64, axis=1)
+    cos = float(((x64 * y64).sum(axis=1) / norms).min()) if x.size else 1.0
     msg = f"{kind}/{name}: {x.shape[0]} vectors, max|diff| {max_abs:.2e}, min cosine {cos:.6f}"
     if max_abs <= atol and cos >= min_cos:
         report.ok(msg)
@@ -160,16 +180,21 @@ def _vectors_close(report, kind, name, joined, col, ref, atol, min_cos) -> None:
 
 
 def _compare_scores(report, kind, name, a, b, atol) -> None:
-    keys = ["doc_id", "narrative_id"]
-    joined = a.join(b, on=keys, how="inner", suffix="_ref")
-    if joined.height != a.height:
-        report.fail(f"{kind}/{name}: score keys differ")
+    if a.columns != b.columns:
+        report.fail(f"{kind}/{name}: columns {a.columns} vs {b.columns} in reference")
         return
-    worst = 0.0
-    for col in ("cos_doc", "cos_para_mean", "cos_para_max"):
-        diff = (joined[col] - joined[f"{col}_ref"]).abs().max()
-        worst = max(worst, float(diff or 0.0))
-    msg = f"{kind}/{name}: {a.height} scores, max|diff| {worst:.2e}"
+    pair = _aligned(a, b, ["date", "doc_id"])
+    if pair is None:
+        report.fail(f"{kind}/{name}: statement dates differ")
+        return
+    a, b = pair
+    narratives = [c for c in a.columns if c not in ("date", "doc_id")]
+    diff = np.abs(a.select(narratives).to_numpy() - b.select(narratives).to_numpy())
+    worst = float(diff.max()) if diff.size else 0.0
+    msg = (
+        f"{kind}/{name}: {a.height} statements x {len(narratives)} narratives, "
+        f"max|diff| {worst:.2e}"
+    )
     if worst <= atol:
         report.ok(msg)
     else:
