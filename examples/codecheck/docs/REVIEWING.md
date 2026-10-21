@@ -260,20 +260,18 @@ digest check refuses it. Restore both with `git checkout -- taxonomy expected`.
 2.14.1). The manual workflow
 [`reproduce.yml`](../../../.github/workflows/reproduce.yml) runs check C on GitHub's
 Linux and Windows runners and uploads every `meta.json` and the comparison output.
-Run of 14 October 2026, pipeline v0.1.0, before the tables were flattened: the
-embeddings and narrative vectors are the same numbers; the score figure then covered
-three score variants, of which the current score is one.
+Run of 21 October 2026 at commit `8b47b0f`:
 
 | | Linux (ubuntu-latest) | Windows (windows-latest) |
 |---|---|---|
 | Machine | x86_64, CPython 3.12.3, torch 2.14.1+cpu | AMD64, CPython 3.12.10, torch 2.14.1 |
 | Verdict | REPRODUCED | REPRODUCED |
 | statements | identical, 6/6 files hash-identical | identical, 6/6 files hash-identical |
-| embeddings, max\|diff\| | 6.97e-06 | 5.45e-06 |
+| embeddings, max\|diff\| | 6.97e-06 | 5.65e-06 |
 | embeddings, min cosine | 1.000000 | 1.000000 |
-| scores, max\|diff\| | 5.01e-06 | 3.76e-06 |
-| narrative vectors, max\|diff\| | 3.73e-07 | 3.80e-07 |
-| Wall time, `all`, model cached | 135 s | 175 s |
+| scores, max\|diff\| | 1.43e-06 | 1.19e-06 |
+| narrative vectors, max\|diff\| | 3.73e-07 | 3.28e-07 |
+| Wall time, `all`, model cached | 139 s | 116 s |
 
 The largest difference is about 14 times below the tolerance. The artifact ids (up
 to the creation minute) and the recorded `uv.lock` digest are the same on all three
