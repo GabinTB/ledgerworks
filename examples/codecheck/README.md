@@ -95,5 +95,5 @@ start from a clean git tree, so the recorded commit describes the code exactly.
 
 ## Contact
 
-Gabin Taibi, University of Twente (BMS-IEBIS), gabin.taibi@gmail.com.
+Gabin Taibi, University of Twente (BMS-IEBIS), gabin.taibi@utwente.nl.
 Issues and questions: https://github.com/GabinTB/ledgerworks/issues.
