@@ -1,8 +1,8 @@
 """fomc_embeddings: one vector per statement paragraph, one parquet per year.
 
 One row per paragraph: ``date``, ``doc_id``, ``para_idx`` (0-based position in the
-statement), ``text`` (the paragraph that was embedded), ``text_sha256``, then the
-vector as Float32 columns ``e0000`` ... ``e1023`` (unit norm). Paragraphs are the
+statement), ``text`` (the paragraph that was embedded), ``text_sha256`` and
+``embedding`` (the unit-norm vector, a list of 1024 Float32). Paragraphs are the
 unit because FOMC statements are written as short, self-contained paragraphs and
 the model was trained at 512 tokens.
 """
@@ -22,7 +22,7 @@ from ledgerworks.verify import Finding, Severity
 
 from codecheck_fomc import PIPELINE, PIPELINE_REPO, PIPELINE_VERSION
 from codecheck_fomc.backends import Backend, make_backend
-from codecheck_fomc.tables import is_vector_column, vector_frame, vectors_of, write_table
+from codecheck_fomc.tables import VECTOR, vector_series, vectors_of, write_table
 
 KEYS = {
     "date": pl.Date,
@@ -30,11 +30,12 @@ KEYS = {
     "para_idx": pl.Int64,
     "text": pl.String,
     "text_sha256": pl.String,
+    "embedding": VECTOR,
 }
 DESCRIPTION = (
     "fomc_embeddings: one row per statement paragraph. date, doc_id and para_idx "
     "(0-based position in the statement) identify it, text is the paragraph that was "
-    "embedded, e0000... are the components of its unit-norm embedding."
+    "embedded, embedding is its unit-norm vector (list of Float32)."
 )
 
 
@@ -103,17 +104,17 @@ class EmbedJob(Job):
         )
         texts = rows["text"].to_list()
         vectors = self.backend.encode(texts) if texts else np.zeros((0, 0), np.float32)
-        keys = pl.DataFrame(
+        out = pl.DataFrame(
             {
                 "date": rows["date"],
                 "doc_id": rows["doc_id"],
                 "para_idx": rows["para_idx"],
                 "text": texts,
                 "text_sha256": [hashlib.sha256(t.encode()).hexdigest() for t in texts],
+                "embedding": vector_series("embedding", vectors),
             },
             schema=KEYS,
         )
-        out = pl.concat([keys, vector_frame(vectors)], how="horizontal") if texts else keys
         write_table(out, ctx.out_dir / f"{unit.key}.parquet", DESCRIPTION)
         ctx.log.info("%s: %d paragraphs from %d statements", unit.key, out.height, docs.height)
 
@@ -128,16 +129,13 @@ def verify_artifact(artifact: Artifact) -> list[Finding]:
     dim = artifact.meta.model_card.dim if artifact.meta.model_card else None
     for path in artifact.files("*.parquet"):
         frame = pl.read_parquet(path)
-        n_dims = sum(is_vector_column(c) for c in frame.columns)
-        if dim and frame.height and n_dims != dim:
+        if dim and (frame["embedding"].list.len() != dim).any():
             findings.append(
                 Finding(
-                    Severity.ERROR,
-                    artifact.artifact_id,
-                    f"{path.name}: {n_dims} vector columns, model dimension is {dim}",
+                    Severity.ERROR, artifact.artifact_id, f"{path.name}: vectors not of dim {dim}"
                 )
             )
-        norms = np.linalg.norm(vectors_of(frame), axis=1)
+        norms = np.linalg.norm(vectors_of(frame, "embedding"), axis=1)
         if frame.height and not np.allclose(norms, 1.0, atol=1e-3):
             findings.append(
                 Finding(Severity.ERROR, artifact.artifact_id, f"{path.name}: vectors not unit norm")

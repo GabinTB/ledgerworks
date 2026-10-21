@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+from datetime import date
 from pathlib import Path
 
 import numpy as np
@@ -117,8 +118,16 @@ class TestPipeline:
             paras = pl.read_parquet(embeddings.path / "2023.parquet")
             assert paras.height == 5
             # flat: keys, the paragraph text, then one Float32 column per dimension
-            assert paras.columns[:5] == ["date", "doc_id", "para_idx", "text", "text_sha256"]
-            assert paras.columns[5:] == [f"e{i:04d}" for i in range(64)]
+            assert paras.columns == [
+                "date",
+                "doc_id",
+                "para_idx",
+                "text",
+                "text_sha256",
+                "embedding",
+            ]
+            assert paras.schema["embedding"] == pl.List(pl.Float32)
+            assert paras["embedding"].list.len().to_list() == [64] * 5
             assert paras["text"][0] == STATEMENTS["20230322"][0]
             assert embeddings.meta.sources == [statements.artifact_id]
             assert embeddings.meta.model_card.backend == "hashing"
@@ -126,10 +135,10 @@ class TestPipeline:
 
             table = pl.read_parquet(scores.path / "2024.parquet")
             narratives = [n["id"] for n in Taxonomy.load(TAXONOMY).narratives]
-            assert table.columns == ["date", "doc_id", *narratives]  # one row per statement
+            assert table.columns == ["date", *narratives]  # one row per statement
             assert table.height == 1
             vectors = pl.read_parquet(scores.path / "narratives.parquet")
-            assert vectors.columns[:2] == ["narrative_id", "label"]
+            assert vectors.columns == ["narrative_id", "label", "vector"]
             assert vectors["narrative_id"].to_list() == narratives
             assert ledger.ancestors(scores.artifact_id) == sorted(
                 [statements.artifact_id, embeddings.artifact_id]
@@ -145,8 +154,8 @@ class TestPipeline:
             ids, nv = read_narratives(scores.path / "narratives.parquet")
             table = pl.read_parquet(scores.path / "2023.parquet")
         doc = paras.filter(pl.col("doc_id") == "monetary20230322a")
-        expected = (vectors_of(doc) @ nv.T).mean(axis=0)
-        got = table.filter(pl.col("doc_id") == "monetary20230322a").select(ids).to_numpy()[0]
+        expected = (vectors_of(doc, "embedding") @ nv.T).mean(axis=0)
+        got = table.filter(pl.col("date") == date(2023, 3, 22)).select(ids).to_numpy()[0]
         np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)
 
     def test_tables_describe_themselves(self, raw_dir, tmp_path):
@@ -255,7 +264,7 @@ class TestRescore:
     def test_without_model_refuses_an_altered_embedding_file(self, reference):
         path = reference / "fomc_embeddings" / "2023.parquet"
         frame = pl.read_parquet(path)
-        frame = frame.with_columns(pl.col("e0000") + 0.01)
+        frame = frame.with_columns(pl.col("embedding").list.eval(pl.element() + 0.01))
         frame.write_parquet(path)
         report = rescore_without_model(reference)
         assert not report.passed
@@ -300,7 +309,7 @@ class TestExplain:
         out = capsys.readouterr().out
         assert "computed from (inputs, by artifact id):" in out
         assert statements.artifact_id in out
-        assert "e0000..e0063 (64 Float32 vector columns)" in out
+        assert "embedding (List(Float32))" in out
         assert "one row per statement paragraph" in out
         assert "uv.lock sha256" in out
 

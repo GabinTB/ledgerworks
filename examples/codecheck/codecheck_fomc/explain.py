@@ -14,7 +14,6 @@ import polars as pl
 from ledgerworks import Artifact
 
 from codecheck_fomc.reference import short_commit
-from codecheck_fomc.tables import is_vector_column
 
 
 def _rel(path: Path) -> str:
@@ -25,12 +24,7 @@ def _rel(path: Path) -> str:
 
 
 def _columns(schema) -> str:
-    names = list(schema.keys())
-    vectors = [c for c in names if is_vector_column(c)]
-    plain = [f"{c} ({schema[c]})" for c in names if not is_vector_column(c)]
-    if vectors:
-        plain.append(f"{vectors[0]}..{vectors[-1]} ({len(vectors)} Float32 vector columns)")
-    return ", ".join(plain)
+    return ", ".join(f"{name} ({dtype})" for name, dtype in schema.items())
 
 
 def _rows(path: Path) -> int:

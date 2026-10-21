@@ -77,8 +77,7 @@ any change to the input changes the id), `n_files`, `parser_version` (`"3"`; see
 
 **Computed from:** one `fomc_statements` artifact (its id is in `sources`).
 
-**One row per statement paragraph.** The vector is spread over 1024 plain columns so
-any tool shows it without unpacking.
+**One row per statement paragraph.**
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -87,7 +86,7 @@ any tool shows it without unpacking.
 | `para_idx` | Int64 | Position of the paragraph in the statement, from 0 |
 | `text` | String | The paragraph that was embedded |
 | `text_sha256` | String | SHA-256 of `text` (UTF-8) |
-| `e0000` ... `e1023` | Float32 | The embedding; the row vector has unit length |
+| `embedding` | List(Float32) | The paragraph's embedding: 1024 values, unit length |
 
 It stays one row per paragraph (not per date) because the score is a mean of
 paragraph-level cosines, which cannot be recovered from an averaged vector.
@@ -99,20 +98,20 @@ paragraph-level cosines, which cannot be recovered from an averaged vector.
 (1024), pooling, licence note, and how it ran (`serving`: CPU, float32, number of
 threads, torch / transformers / sentence-transformers versions).
 
-**Content check:** every row has as many `e` columns as the model's dimension, and
-unit norm (within 1e-3).
+**Content check:** every `embedding` has the model's dimension (1024) and unit
+length (within 1e-3).
 
 ## `fomc_narrative_scores`
 
 **Computed from:** one `fomc_embeddings` artifact, plus the taxonomy file
 `taxonomy/monetary_policy.yaml` (its SHA-256 is a hyperparameter).
 
-**One row per statement, one column per narrative.**
+**One row per statement, one column per narrative.** There is one statement per
+date, so `date` identifies the row.
 
 | Column | Type | Meaning |
 |---|---|---|
 | `date` | Date | Statement date |
-| `doc_id` | String | The statement |
 | `federal_reserve`, `inflation`, `rate_hike`, `rate_cut`, `balance_sheet`, `labor_market`, `economic_growth`, `recession`, `financial_conditions`, `uncertainty` | Float32 | Score of the statement on that narrative |
 
 The score is the mean, over the statement's paragraphs, of the cosine between the
@@ -128,13 +127,13 @@ The same folder holds **`narratives.parquet`**, one row per narrative:
 |---|---|---|
 | `narrative_id` | String | Column name used in the score tables |
 | `label` | String | Human label from the taxonomy |
-| `e0000` ... `e1023` | Float32 | The narrative vector: unit-length mean of the embeddings of the narrative's description and seed phrases |
+| `vector` | List(Float32) | The narrative vector: 1024 values, the unit-length mean of the embeddings of the narrative's description and seed phrases |
 
 **Hyperparameters:** `taxonomy`, `taxonomy_version`, `taxonomy_sha256`,
 `narrative_vector` (how the vector is built), year layout.
 
 **Content check:** `narratives.parquet` present; every year file has exactly the
-columns `date`, `doc_id` and the narratives, with values in [-1, 1].
+columns `date` and the narratives, with values in [-1, 1].
 
 ## `expected/RUN.json`
 
@@ -146,10 +145,10 @@ Every artifact folder has one. Abridged from the committed embeddings:
 
 ```jsonc
 {
-  "artifact_id": "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.2.0__params030c4bc3__20261021T...",
+  "artifact_id": "fomc_embeddings__BatuhanECB-FinModernBERT-embed-large-v1-4fd33d2335e7__v0.3.0__params030c4bc3__20261021T...",
   "kind": "fomc_embeddings",
   "pipeline": "ledgerworks-codecheck-fomc",
-  "pipeline_version": "v0.2.0",
+  "pipeline_version": "v0.3.0",
   "hyperparams": {                       // these define the id
     "backend": "finmodernbert",
     "model_id": "BatuhanECB/FinModernBERT-embed-large-v1",
@@ -159,7 +158,7 @@ Every artifact folder has one. Abridged from the committed embeddings:
     "partition_freq": "Y", "start": "2021-01-01", "end": "2026-12-31"
   },
   "sources": [                           // lineage: the input artifact(s)
-    "fomc_statements__v0.2.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261021T..."
+    "fomc_statements__v0.3.0__end2026-12-31_manifest_sha25612103e8d_n_files46_parser_version3_partition_freqY_start2021-01-01__20261021T..."
   ],
   "model_card": {
     "model_id": "BatuhanECB/FinModernBERT-embed-large-v1",

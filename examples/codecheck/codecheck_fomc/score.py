@@ -3,9 +3,9 @@
 The taxonomy (``taxonomy/*.yaml``) gives each narrative a description and seed
 phrases. They are embedded with the backend recorded on the embeddings artifact
 (same model, same revision), averaged into one unit vector per narrative, and
-written to ``narratives.parquet`` (one row per narrative, ``e0000``... columns).
+written to ``narratives.parquet`` (one row per narrative: id, label, vector).
 
-Scores, one parquet per year, one row per statement date, one column per narrative:
+Scores, one parquet per year, one row per statement (``date``), one column per narrative:
 
     score[date, narrative] = mean over the statement's paragraphs p of cos(p, narrative)
 
@@ -31,18 +31,17 @@ from ledgerworks.verify import Finding, Severity
 from codecheck_fomc import PIPELINE, PIPELINE_REPO, PIPELINE_VERSION, TAXONOMY_DIR
 from codecheck_fomc.backends import Backend, normalise
 from codecheck_fomc.embed import backend_from_params
-from codecheck_fomc.tables import vector_frame, vectors_of, write_table
+from codecheck_fomc.tables import VECTOR, vector_series, vectors_of, write_table
 
 NARRATIVES_FILE = "narratives.parquet"
 DESCRIPTION = (
-    "fomc_narrative_scores: one row per FOMC statement (date, doc_id), one column per "
+    "fomc_narrative_scores: one row per FOMC statement (its date), one column per "
     "narrative of the taxonomy. Each value is the mean, over the statement's paragraphs, "
     "of the cosine between the paragraph embedding and the narrative vector."
 )
 NARRATIVES_DESCRIPTION = (
     "Narrative vectors: one row per narrative of the taxonomy (narrative_id, label); "
-    "e0000... are the components of the unit-norm mean of the embeddings of its "
-    "description and seed phrases."
+    "vector is the unit-norm mean of the embeddings of its description and seed phrases."
 )
 
 
@@ -81,36 +80,39 @@ def narrative_vectors(taxonomy: Taxonomy, backend: Backend) -> tuple[list[str], 
 
 def narratives_frame(taxonomy: Taxonomy, ids: list[str], vectors: np.ndarray) -> pl.DataFrame:
     labels = {n["id"]: n.get("label", n["id"]) for n in taxonomy.narratives}
-    keys = pl.DataFrame(
-        {"narrative_id": ids, "label": [labels[i] for i in ids]},
-        schema={"narrative_id": pl.String, "label": pl.String},
+    return pl.DataFrame(
+        {
+            "narrative_id": ids,
+            "label": [labels[i] for i in ids],
+            "vector": vector_series("vector", vectors),
+        },
+        schema={"narrative_id": pl.String, "label": pl.String, "vector": VECTOR},
     )
-    return pl.concat([keys, vector_frame(vectors)], how="horizontal")
 
 
 def read_narratives(path: Path) -> tuple[list[str], np.ndarray]:
     """Narrative ids and their (n, d) vectors from a ``narratives.parquet``."""
     frame = pl.read_parquet(path)
-    return frame["narrative_id"].to_list(), vectors_of(frame)
+    return frame["narrative_id"].to_list(), vectors_of(frame, "vector")
 
 
 def score_frame(paragraphs: pl.DataFrame, ids: list[str], nv: np.ndarray) -> pl.DataFrame:
-    """One row per statement (date, doc_id), one Float32 column per narrative.
+    """One row per statement (``date``), one Float32 column per narrative.
 
     ``paragraphs`` is a fomc_embeddings table (``date``, ``doc_id``, ``para_idx``,
-    ``e*``); ``nv`` the (n, d) unit narrative vectors in the order of ``ids``.
+    ``embedding``); ``nv`` the (n, d) unit narrative vectors in the order of ``ids``.
     """
     paragraphs = paragraphs.sort("date", "doc_id", "para_idx")
-    pv = vectors_of(paragraphs)  # (p, d), unit norm
-    if pv.shape[1] == 0 or pv.shape[1] != nv.shape[1]:
+    pv = vectors_of(paragraphs, "embedding")  # (p, d), unit norm
+    if pv.shape[1] != nv.shape[1]:
         raise ValueError(
             f"paragraph vectors of dim {pv.shape[1]}, narrative vectors of dim {nv.shape[1]}: "
-            "both must be flat e0000... columns (pipeline v0.2.0 or later) of the same model"
+            "they must come from the same model"
         )
     sims = pv @ nv.T  # (p, n): cosine of every paragraph with every narrative
     per_para = pl.concat(
         [
-            paragraphs.select("date", "doc_id"),
+            paragraphs.select("date"),
             pl.DataFrame(
                 {nid: sims[:, j] for j, nid in enumerate(ids)},
                 schema={nid: pl.Float32 for nid in ids},
@@ -119,7 +121,7 @@ def score_frame(paragraphs: pl.DataFrame, ids: list[str], nv: np.ndarray) -> pl.
         how="horizontal",
     )
     return (
-        per_para.group_by("date", "doc_id", maintain_order=True)
+        per_para.group_by("date", maintain_order=True)
         .agg(pl.col(ids).mean())
         .with_columns(pl.col(ids).cast(pl.Float32))
     )
@@ -197,12 +199,12 @@ def verify_artifact(artifact: Artifact) -> list[Finding]:
         if path.name == NARRATIVES_FILE:
             continue
         frame = pl.read_parquet(path)
-        if frame.columns != ["date", "doc_id", *ids]:
+        if frame.columns != ["date", *ids]:
             findings.append(
                 Finding(
                     Severity.ERROR,
                     artifact.artifact_id,
-                    f"{path.name}: columns are not date, doc_id and the {len(ids)} narratives",
+                    f"{path.name}: columns are not date and the {len(ids)} narratives",
                 )
             )
             continue

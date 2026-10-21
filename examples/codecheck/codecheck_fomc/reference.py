@@ -22,6 +22,7 @@ from pathlib import Path
 import polars as pl
 from ledgerworks import Artifact, Ledger, hash_file, read_meta
 
+from codecheck_fomc import PIPELINE_VERSION
 from codecheck_fomc.compare import Report, _compare_scores
 from codecheck_fomc.corpus import IngestJob
 from codecheck_fomc.score import NARRATIVES_FILE, read_narratives, score_frame
@@ -99,10 +100,11 @@ def rescore_without_model(expected_dir: Path, show_year: str | None = None) -> R
     if report.passed is False:
         return report
     ids, nv = read_narratives(scores.artifact.path / NARRATIVES_FILE)
-    if nv.shape[1] == 0:
+    if scores.artifact.meta.pipeline_version != PIPELINE_VERSION:
         report.fail(
-            f"{NARRATIVES_FILE} has no e0000... columns: the reference predates pipeline "
-            "v0.2.0 (flat tables); rebuild it with `all` and `freeze`"
+            f"the reference was written by pipeline {scores.artifact.meta.pipeline_version}, "
+            f"this code is {PIPELINE_VERSION} (different table layout); rebuild it with "
+            "`all` and `freeze`"
         )
         return report
     report.lines.append(

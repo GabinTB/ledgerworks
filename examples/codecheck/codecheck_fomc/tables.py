@@ -1,7 +1,6 @@
-"""Flat parquet tables: one column per vector dimension, a description in the file.
+"""Parquet helpers: vectors in one list column, a description in every file.
 
-Vectors are stored as plain Float32 columns ``e0000``, ``e0001``, ... so any tool
-(polars, pandas, DuckDB, a spreadsheet) shows them without unpacking a list column.
+A vector is stored in a single ``List(Float32)`` column (``embedding``, ``vector``).
 Every file carries a ``description`` entry in its parquet key-value metadata saying
 what a row and a column are:
 
@@ -15,35 +14,19 @@ from pathlib import Path
 import numpy as np
 import polars as pl
 
-VECTOR_PREFIX = "e"
+VECTOR = pl.List(pl.Float32)
 
 
-def vector_columns(dim: int) -> list[str]:
-    """``e0000`` ... ``e{dim-1}``."""
-    return [f"{VECTOR_PREFIX}{i:04d}" for i in range(dim)]
+def vector_series(name: str, vectors: np.ndarray) -> pl.Series:
+    """A (n, d) array as one ``List(Float32)`` column."""
+    return pl.Series(name, [v.tolist() for v in np.asarray(vectors, np.float32)], dtype=VECTOR)
 
 
-def is_vector_column(name: str) -> bool:
-    return name.startswith(VECTOR_PREFIX) and name[1:].isdigit()
-
-
-def vector_frame(vectors: np.ndarray) -> pl.DataFrame:
-    """A (n, d) float32 array as d Float32 columns."""
-    vectors = np.asarray(vectors, dtype=np.float32)
-    if vectors.ndim != 2:
-        raise ValueError(f"expected a 2-d array, got shape {vectors.shape}")
-    return pl.DataFrame(
-        {name: vectors[:, i] for i, name in enumerate(vector_columns(vectors.shape[1]))},
-        schema={name: pl.Float32 for name in vector_columns(vectors.shape[1])},
-    )
-
-
-def vectors_of(frame: pl.DataFrame) -> np.ndarray:
-    """The ``e*`` columns of a frame as a (n, d) float32 array, in column order."""
-    cols = [c for c in frame.columns if is_vector_column(c)]
-    if not cols:
-        return np.zeros((frame.height, 0), dtype=np.float32)
-    return frame.select(cols).to_numpy().astype(np.float32, copy=False)
+def vectors_of(frame: pl.DataFrame, column: str) -> np.ndarray:
+    """A ``List(Float32)`` column as a (n, d) float32 array."""
+    if frame.height == 0:
+        return np.zeros((0, 0), dtype=np.float32)
+    return np.array(frame[column].to_list(), dtype=np.float32)
 
 
 def write_table(frame: pl.DataFrame, path: Path, description: str) -> None:

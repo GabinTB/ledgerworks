@@ -16,7 +16,7 @@ from pathlib import Path
 
 PIPELINE = "ledgerworks-codecheck-fomc"
 PIPELINE_REPO = "https://github.com/GabinTB/ledgerworks"
-PIPELINE_VERSION = "v0.2.0"
+PIPELINE_VERSION = "v0.3.0"
 
 HERE = Path(__file__).resolve().parent.parent  # examples/codecheck
 DATA_RAW = HERE / "data" / "raw"

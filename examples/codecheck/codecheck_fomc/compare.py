@@ -153,7 +153,8 @@ def _compare_embeddings(report, kind, name, a, b, atol, min_cos) -> None:
     if not a["text_sha256"].equals(b["text_sha256"]):
         report.fail(f"{kind}/{name}: paragraph text differs from the reference")
         return
-    _vectors_close(report, kind, name, vectors_of(a), vectors_of(b), atol, min_cos)
+    x, y = vectors_of(a, "embedding"), vectors_of(b, "embedding")
+    _vectors_close(report, kind, name, x, y, atol, min_cos)
 
 
 def _compare_vectors(report, kind, name, a, b, key, atol, min_cos) -> None:
@@ -161,7 +162,8 @@ def _compare_vectors(report, kind, name, a, b, key, atol, min_cos) -> None:
     if pair is None:
         report.fail(f"{kind}/{name}: {key} sets differ")
         return
-    _vectors_close(report, kind, name, vectors_of(pair[0]), vectors_of(pair[1]), atol, min_cos)
+    x, y = vectors_of(pair[0], "vector"), vectors_of(pair[1], "vector")
+    _vectors_close(report, kind, name, x, y, atol, min_cos)
 
 
 def _vectors_close(report, kind, name, x, y, atol, min_cos) -> None:
@@ -183,12 +185,12 @@ def _compare_scores(report, kind, name, a, b, atol) -> None:
     if a.columns != b.columns:
         report.fail(f"{kind}/{name}: columns {a.columns} vs {b.columns} in reference")
         return
-    pair = _aligned(a, b, ["date", "doc_id"])
+    pair = _aligned(a, b, ["date"])
     if pair is None:
         report.fail(f"{kind}/{name}: statement dates differ")
         return
     a, b = pair
-    narratives = [c for c in a.columns if c not in ("date", "doc_id")]
+    narratives = [c for c in a.columns if c != "date"]
     diff = np.abs(a.select(narratives).to_numpy() - b.select(narratives).to_numpy())
     worst = float(diff.max()) if diff.size else 0.0
     msg = (
