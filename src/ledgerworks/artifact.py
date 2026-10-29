@@ -247,6 +247,10 @@ class RunMeta:
     # Set on an artifact registered by Ledger.relink: {"from": old id, "replace":
     # {old parent: new parent}, "checks": [check results], "commit": git commit}.
     relink: dict[str, Any] | None = None
+    # Set on an artifact seeded into a sandbox by Ledger.seed_from: {"root": source
+    # root, "date": YYYY-MM-DD, "mode": "link" | "copy"}. A "link" artifact shares its
+    # files (read-only) with the source, so it is never extended or resumed in place.
+    seeded_from: dict[str, Any] | None = None
     # New artifacts carry the creation minute in their id (YYYYMMDDTHHMM); records
     # written before this field existed keep the date-only id they were registered under.
     id_minute: bool = False
@@ -324,6 +328,7 @@ class RunMeta:
             "created": self.created,
             "group": self.group,
             "relink": dict(self.relink) if self.relink is not None else None,
+            **({"seeded_from": dict(self.seeded_from)} if self.seeded_from is not None else {}),
             **({"id_minute": True} if self.id_minute else {}),
             # Denormalised aggregates for human/tool convenience (never read back).
             "partial": self.partial,

@@ -11,6 +11,8 @@
                     --check SPEC [...] [--assert-source] [--kind-change OLD=NEW ...]
                     [--notes TEXT] [--deprecate-old] [--dry-run]
     ledgerworks relink-plan ARTIFACT_ID
+    ledgerworks seed --from ROOT ID [ID ...] [--no-ancestors] [--dry-run]
+                    [--allow-partial] [--allow-deprecated] [--copy]
 
 Check specs (ledgerworks.equivalence.parse_check): files[@PARENT] |
 projection[@PARENT]=COL,COL,OLD:NEW[,by=all] | keys[@PARENT]=KEY[:PARENT_KEY][,by=all] |
@@ -284,6 +286,29 @@ def cmd_relink_plan(index: Ledger, args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_seed(index: Ledger, args: argparse.Namespace) -> int:
+    source_root = Path(args.source).expanduser().resolve()
+    if source_root == index.root:
+        raise LedgerError(f"--from is the target ledger itself: {source_root}")
+    with _open(source_root, "seed") as source:
+        seeded = index.seed_from(
+            source,
+            args.artifact_ids,
+            with_ancestors=not args.no_ancestors,
+            dry_run=args.dry_run,
+            allow_partial=args.allow_partial,
+            allow_deprecated=args.allow_deprecated,
+            copy=args.copy,
+        )
+    verb = "would seed" if args.dry_run else "seeded"
+    if args.copy:
+        verb += " (copy)"
+    for artifact_id in seeded:
+        print(f"{verb} {artifact_id}")
+    print(f"\n{len(seeded)} artifact(s) {verb} from {source_root} into {index.root}")
+    return 0
+
+
 def cmd_reindex(index: Ledger, args: argparse.Namespace) -> int:
     count = index.reindex()
     print(f"reindexed {count} artifact(s) from {index.root}")
@@ -404,6 +429,22 @@ def build_parser() -> argparse.ArgumentParser:
     p_rp = sub.add_parser("relink-plan", help="descendants of an artifact, parents first")
     p_rp.add_argument("artifact_id")
     p_rp.set_defaults(func=cmd_relink_plan)
+
+    p_sd = sub.add_parser(
+        "seed", help="seed this ledger (a sandbox) with artifacts of another root, as hard links"
+    )
+    p_sd.add_argument("--from", dest="source", required=True, metavar="ROOT", help="source root")
+    p_sd.add_argument("artifact_ids", nargs="+")
+    p_sd.add_argument("--no-ancestors", action="store_true", help="seed only the ids given")
+    p_sd.add_argument("--dry-run", action="store_true", help="check everything, write nothing")
+    p_sd.add_argument("--allow-partial", action="store_true")
+    p_sd.add_argument("--allow-deprecated", action="store_true")
+    p_sd.add_argument(
+        "--copy",
+        action="store_true",
+        help="byte copies (writable, extendable) instead of read-only hard links",
+    )
+    p_sd.set_defaults(func=cmd_seed)
 
     return ap
 

@@ -49,8 +49,10 @@ import json
 import logging
 import os
 import re
+import shutil
 import sqlite3
-from collections.abc import Iterator, Sequence
+import stat
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -65,8 +67,10 @@ from ledgerworks.artifact import (
 from ledgerworks.meta import (
     JOB_CONTROL_FILES,
     META_FILENAME,
+    README_FILENAME,
     git_commit,
     hash_directory,
+    hash_file,
     read_meta,
     run_environment,
     write_sidecars,
@@ -411,6 +415,7 @@ class Ledger:
             raise LedgerError("give at most one of extend / resume")
         if resume is not None:
             existing = self.get(resume)
+            _refuse_linked_seed(existing)
             if not existing.partial:
                 raise LedgerError(
                     f"cannot resume a complete artifact: {resume}. "
@@ -429,6 +434,7 @@ class Ledger:
             notes = (f"resume of execution {len(meta.runs)}. {notes}").strip()
         elif extend is not None:
             existing = self.get(extend)
+            _refuse_linked_seed(existing)
             if existing.partial:
                 raise LedgerError(
                     f"cannot extend a partial artifact: {extend}. Finish or deprecate it first."
@@ -861,13 +867,187 @@ class Ledger:
             else self.latest(kind_or_artifact, **filters)
         )
         view = alias or artifact.kind
-        if not view.replace("_", "").isalnum():
-            raise LedgerError(f"unsafe view name {view!r}")
+        return register_views(conn, {view: artifact}, pattern=pattern)[0]
+
+    # -- sandbox seeding ---------------------------------------------------
+
+    def seed_from(
+        self,
+        source: Ledger,
+        artifact_ids: Sequence[str],
+        *,
+        with_ancestors: bool = True,
+        dry_run: bool = False,
+        allow_partial: bool = False,
+        allow_deprecated: bool = False,
+        copy: bool = False,
+    ) -> builtins.list[str]:
+        """Seed this ledger (a sandbox) with artifacts of ``source``, as read-only hard links.
+
+        Each artifact (and, with ``with_ancestors``, every registered ancestor) gets
+        the same ``{layer}/[{group}/]{kind}/{id}/`` directory here: content files are
+        hard-linked (sub-directories included), ``meta.json`` / ``README.md`` and the
+        job control files are copied (``job.lock`` is not: a lock belongs to a
+        process of the source), so a sidecar written here never reaches the source.
+        The copied ``meta.json`` records the seeding in ``seeded_from`` (root, date,
+        mode) and its notes, and the index row is upserted from it. The source ledger
+        is never written.
+
+        A linked file is one inode shared with the source, so it is made read-only
+        (write bits cleared) after the hash check: the source file becomes read-only
+        too, as an artifact is immutable anyway. Nothing in the sandbox can then write
+        into the source, and ``run(extend=...)`` / ``run(resume=...)`` refuse a
+        link-seeded artifact. ``copy`` byte-copies the content files instead: the
+        copy is writable and extendable, and the source files are not touched.
+
+        Everything is checked before anything is linked. Refused: a partial or
+        deprecated artifact (unless allowed), a live ``job.lock``, an id already here
+        with different file hashes (an identical one is skipped, with a warning), a
+        target on another filesystem when linking (it never falls back to a copy).
+        After linking or copying, the recorded files are re-hashed against the
+        source's hashes.
+
+        Args:
+            source:           the ledger to seed from (e.g. production).
+            artifact_ids:     ids to seed.
+            with_ancestors:   also seed their registered ancestors (default True);
+                              ancestors not registered in ``source`` are external
+                              inputs and are skipped with a warning.
+            dry_run:          check everything, write nothing.
+            allow_partial:    seed partial artifacts too.
+            allow_deprecated: seed deprecated artifacts too.
+            copy:             byte copies instead of read-only hard links.
+
+        Returns:
+            The ids seeded (or that would be, on a dry run), ancestors first.
+        """
+        if source.root == self.root:
+            raise LedgerError(f"cannot seed a ledger from itself: {self.root}")
+        wanted: builtins.list[str] = []
+        for artifact_id in artifact_ids:
+            if not source.exists(artifact_id):
+                raise LedgerError(f"no artifact with id {artifact_id!r} in {source.root}")
+            if with_ancestors:
+                for parent in _parents_first(source, artifact_id):
+                    if not source.exists(parent):
+                        log.warning(
+                            "%s: ancestor %s not registered in source, skipped", artifact_id, parent
+                        )
+                    elif parent not in wanted:
+                        wanted.append(parent)
+            if artifact_id not in wanted:
+                wanted.append(artifact_id)
+
+        plan: builtins.list[tuple[Artifact, Path, RunMeta, dict[str, dict[str, Any]]]] = []
+        for artifact_id in wanted:
+            art = source.get(artifact_id)
+            if not art.path.is_dir():
+                raise LedgerError(f"{artifact_id}: directory missing from disk: {art.path}")
+            lock = art.path / _LOCK_FILE
+            if lock.exists() and _lock_age_s(lock) < LIVE_LOCK_S:
+                raise LedgerError(f"{artifact_id} is held by a live job ({lock}); pause it first")
+            if art.partial and not allow_partial:
+                raise LedgerError(f"{artifact_id} is partial; pass allow_partial to seed it")
+            if art.deprecated and not allow_deprecated:
+                raise LedgerError(f"{artifact_id} is deprecated; pass allow_deprecated to seed it")
+            meta, file_hashes = read_meta(art.path)
+            target = self.artifact_dir(art.layer, art.kind, artifact_id, meta.group)
+            if self.exists(artifact_id) or target.exists():
+                here = self.get(artifact_id).path if self.exists(artifact_id) else target
+                try:
+                    _, here_hashes = read_meta(here)
+                except (OSError, ValueError) as exc:
+                    raise LedgerError(
+                        f"{artifact_id} already exists at {here} without a readable "
+                        f"meta.json ({exc})"
+                    ) from exc
+                if _digests(here_hashes) != _digests(file_hashes):
+                    raise LedgerError(
+                        f"{artifact_id} already exists at {here} with different file hashes"
+                    )
+                log.warning("%s already seeded at %s (identical files), skipped", artifact_id, here)
+                continue
+            self.check_group(meta.group, art.kind, art.layer)
+            if not copy:
+                _same_device(art.path, target)
+            plan.append((art, target, meta, file_hashes))
+
+        if dry_run:
+            return [art.artifact_id for art, *_ in plan]
+
+        seeded_from = {
+            "root": str(source.root),
+            "date": utc_now_iso()[:10],
+            "mode": "copy" if copy else "link",
+        }
+        note = f"seeded from {seeded_from['root']} on {seeded_from['date']}"
+        for art, target, meta, file_hashes in plan:
+            target.mkdir(parents=True)
+            try:
+                content = _seed_tree(art.path, target, copy=copy)
+                for name, entry in file_hashes.items():
+                    seeded = target / name
+                    if not seeded.is_file() or hash_file(seeded)[0] != entry["digest"]:
+                        raise LedgerError(
+                            f"{art.artifact_id}: {name} does not match the source's recorded hash"
+                        )
+                if not copy:
+                    for path in content:
+                        os.chmod(path, stat.S_IMODE(path.stat().st_mode) & ~0o222)
+                meta.seeded_from = dict(seeded_from)
+                meta.notes = f"{meta.notes} {note}".strip() if meta.notes else note
+                write_sidecars(target, meta, file_hashes)
+            except BaseException:
+                # Only the directory created above: removing hard links and copies
+                # leaves the source files in place.
+                shutil.rmtree(target, ignore_errors=True)
+                raise
+            self._upsert(meta, art.layer, target, file_hashes)
+            log.info("seeded %s: %s -> %s", art.artifact_id, art.path, target)
+        return [art.artifact_id for art, *_ in plan]
+
+
+# ---------------------------------------------------------------------------
+# DuckDB views
+# ---------------------------------------------------------------------------
+
+
+def register_views(
+    conn: Any, views: Mapping[str, Artifact], *, pattern: str = "*.parquet"
+) -> list[str]:
+    """Create one DuckDB view per (alias, artifact).
+
+    Each view is ``CREATE OR REPLACE VIEW {alias} AS SELECT * FROM
+    read_parquet('{artifact.glob(pattern)}')``, so several artifacts can be joined
+    in one statement:
+
+        register_views(conn, {"docs": docs, "scores": scores})
+        conn.execute("SELECT * FROM docs JOIN scores USING (doc_id)")
+
+    Every alias and artifact is checked before any view is created.
+
+    Args:
+        conn:    a DuckDB connection (anything with ``.execute(sql)``).
+        views:   ``{alias: artifact}``.
+        pattern: glob of the files read inside each artifact directory.
+
+    Returns:
+        The view names, in input order.
+
+    Raises:
+        LedgerError: an alias is not a safe SQL identifier, or an artifact is partial.
+    """
+    for alias, artifact in views.items():
+        if not alias.replace("_", "").isalnum():
+            raise LedgerError(f"unsafe view name {alias!r}")
+        if artifact.partial:
+            raise LedgerError(f"cannot register a partial artifact: {artifact.artifact_id}")
+    for alias, artifact in views.items():
         conn.execute(
-            f"CREATE OR REPLACE VIEW {view} AS "
+            f"CREATE OR REPLACE VIEW {alias} AS "
             f"SELECT * FROM read_parquet('{artifact.glob(pattern)}')"
         )
-        return view
+    return builtins.list(views)
 
 
 # ---------------------------------------------------------------------------
@@ -886,6 +1066,67 @@ def _artifact_dirs(layer_dir: Path) -> list[Path]:
         else:
             dirnames.sort()
     return sorted(found)
+
+
+def _refuse_linked_seed(artifact: Artifact) -> None:
+    """A link-seeded artifact shares its (read-only) files with another ledger."""
+    if (artifact.meta.seeded_from or {}).get("mode") == "link":
+        raise LedgerError(
+            f"{artifact.artifact_id}: seeded artifact, read-only in this ledger; "
+            "create a new artifact or seed with --copy"
+        )
+
+
+def _parents_first(ledger: Ledger, artifact_id: str) -> list[str]:
+    """Every ancestor of ``artifact_id`` in ``ledger``, each one after its own parents."""
+    order: list[str] = []
+    seen: set[str] = set()
+
+    def visit(node: str) -> None:
+        for parent in ledger.parents(node):
+            if parent not in seen:
+                seen.add(parent)
+                visit(parent)
+                order.append(parent)
+
+    visit(artifact_id)
+    return order
+
+
+def _digests(file_hashes: dict[str, dict[str, Any]]) -> dict[str, str]:
+    return {name: entry["digest"] for name, entry in file_hashes.items()}
+
+
+# Copied into a seeded directory rather than linked: written in place (job.log is
+# appended to) or rewritten by the sandbox. job.lock is neither: it belongs to the source.
+_SEED_COPIED = frozenset({META_FILENAME, README_FILENAME, *JOB_CONTROL_FILES} - {_LOCK_FILE})
+
+
+def _seed_tree(source: Path, target: Path, *, copy: bool = False) -> list[Path]:
+    """Hard-link (``copy``: byte-copy) every content file of ``source`` into the existing
+    ``target`` (same relative paths, sub-directories included); copy the sidecars and
+    job control files, skip ``job.lock`` and stray ``.tmp`` files. Returns the content
+    files written in ``target``."""
+    content: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(source):
+        dirnames.sort()
+        here = Path(dirpath)
+        top = here == source
+        for name in sorted(filenames):
+            if name.endswith(".tmp") or (top and name == _LOCK_FILE):
+                continue
+            src = here / name
+            dst = target / src.relative_to(source)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            if top and name in _SEED_COPIED:
+                shutil.copy2(src, dst)
+                continue
+            if copy:
+                shutil.copy2(src, dst)
+            else:
+                os.link(src, dst)
+            content.append(dst)
+    return content
 
 
 def _lock_age_s(lock: Path) -> float:

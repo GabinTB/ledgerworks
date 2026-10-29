@@ -342,6 +342,20 @@ def render_readme(
             lines.append(f"- `{source}`")
         lines.append("")
 
+    if meta.seeded_from:
+        sf = meta.seeded_from
+        how = (
+            "hard links, read-only in both ledgers"
+            if sf.get("mode") == "link"
+            else "a byte copy, writable here"
+        )
+        lines += [
+            "## Seeded",
+            "",
+            f"Seeded from `{sf.get('root')}` on {sf.get('date')} ({how}).",
+            "",
+        ]
+
     if meta.relink:
         rl = meta.relink
         lines += [

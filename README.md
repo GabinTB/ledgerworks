@@ -95,12 +95,46 @@ The artifact directory:
 ## Command lines
 
 ```
-ledgerworks init | ls | show ID | verify | lineage ID | deprecate ID --reason ... | reindex | move | relink
+ledgerworks init | ls | show ID | verify | lineage ID | deprecate ID --reason ... | reindex | move | relink | seed
 ledgerworks-jobs start KIND | resume ID | update ID | pause ID | status | list | check ID
 ```
 
 The root comes from `--root`, else `$LEDGER_ROOT` (also read from `.env` when
 the `cli` extra is installed).
+
+## Sandbox
+
+A sandbox is an ordinary ledger root next to the production one, on the same
+filesystem (e.g. `/mnt/storage/gdrive/Datalake` and
+`/mnt/storage/gdrive/Datalake_sandbox`). Create it, seed it with the artifacts
+you need, then point any command at it:
+
+```bash
+ledgerworks --root /mnt/storage/gdrive/Datalake_sandbox init
+ledgerworks --root /mnt/storage/gdrive/Datalake_sandbox seed \
+    --from /mnt/storage/gdrive/Datalake ID [ID ...]      # --dry-run first to see the list
+export LEDGER_ROOT=/mnt/storage/gdrive/Datalake_sandbox
+ledgerworks ls; ledgerworks-jobs start ...                # everything now runs in the sandbox
+```
+
+`seed` hard-links the content files (zero copy, sub-directories included) and
+copies `meta.json` / `README.md`, so each seeded artifact keeps its id, layer and
+group, and records `seeded_from: {root, date, mode}` in its `meta.json`. Ancestors come along
+unless `--no-ancestors`. It refuses partial or deprecated artifacts (unless
+`--allow-partial` / `--allow-deprecated`), an artifact held by a live job, an id
+already in the sandbox with different hashes (an identical one is skipped), and
+a sandbox on another filesystem (it never falls back to a copy). The production
+ledger is only read.
+
+The sandbox can never write into the production ledger. A linked file is one
+inode in both roots, so `seed` makes it read-only (in production too: artifacts
+are immutable anyway; directories are left alone). An in-place write in the
+sandbox fails with `PermissionError`, and `extend` / `resume` (hence
+`ledgerworks-jobs update` / `resume`) refuse a link-seeded artifact: new runs
+write new artifacts. Deleting the sandbox removes only its links. To work on a
+seeded artifact in place, seed it with `--copy`: a byte copy (re-hashed like a
+link), writable and extendable, with the production files untouched. In Python:
+`sandbox.seed_from(Ledger(prod_root, create=False), ids, copy=False)`.
 
 ## Plugging in your own kinds
 
